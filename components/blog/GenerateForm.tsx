@@ -22,7 +22,7 @@ export default function GenerateForm({
   const [form, setForm] = useState<GenerateFormState>({
     topic: "",
     tone: "friendly",
-    platform: "both",
+    platform: "naver",
   });
   const [error, setError] = useState<string | null>(null);
 
@@ -31,26 +31,13 @@ export default function GenerateForm({
     setForm((prev) => ({ ...prev, topic }));
   };
 
-  // 플랫폼 토글 처리
-  const handlePlatformToggle = (selected: "naver" | "thread") => {
-    setForm((prev) => {
-      if (prev.platform === "both") {
-        return {
-          ...prev,
-          platform: selected === "naver" ? "thread" : "naver",
-        };
-      }
-      if (prev.platform === selected) {
-        return { ...prev, platform: "both" };
-      }
-      return { ...prev, platform: "both" };
-    });
+  // 플랫폼 단일 선택 (둘 중 하나만)
+  const handlePlatformSelect = (selected: "naver" | "thread") => {
+    setForm((prev) => ({ ...prev, platform: selected }));
   };
 
-  const isNaverSelected =
-    form.platform === "naver" || form.platform === "both";
-  const isThreadSelected =
-    form.platform === "thread" || form.platform === "both";
+  const isNaverSelected = form.platform === "naver";
+  const isThreadSelected = form.platform === "thread";
 
   // 글 생성 API 호출
   const handleSubmit = async (e: React.FormEvent) => {
@@ -170,7 +157,7 @@ export default function GenerateForm({
         <div className="grid grid-cols-2 gap-2">
           <button
             type="button"
-            onClick={() => handlePlatformToggle("naver")}
+            onClick={() => handlePlatformSelect("naver")}
             className={`flex items-center justify-center gap-2 rounded-lg border py-3 text-sm font-medium transition-all ${
               isNaverSelected
                 ? "border-indigo-300 bg-indigo-50 text-indigo-700"
@@ -178,10 +165,13 @@ export default function GenerateForm({
             }`}
           >
             <span className="text-base">📝</span> 네이버 블로그
+            {isNaverSelected && (
+              <span className="text-xs text-indigo-400">✓</span>
+            )}
           </button>
           <button
             type="button"
-            onClick={() => handlePlatformToggle("thread")}
+            onClick={() => handlePlatformSelect("thread")}
             className={`flex items-center justify-center gap-2 rounded-lg border py-3 text-sm font-medium transition-all ${
               isThreadSelected
                 ? "border-indigo-300 bg-indigo-50 text-indigo-700"
@@ -189,6 +179,9 @@ export default function GenerateForm({
             }`}
           >
             <span className="text-base">💬</span> 쓰레드
+            {isThreadSelected && (
+              <span className="text-xs text-indigo-400">✓</span>
+            )}
           </button>
         </div>
       </div>
