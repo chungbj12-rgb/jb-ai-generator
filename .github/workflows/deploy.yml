@@ -41,11 +41,14 @@ jobs:
         run: |
           if [ -z "$SUPABASE_ACCESS_TOKEN" ] || [ -z "$SUPABASE_DB_PASSWORD" ]; then
             echo "::warning::SUPABASE_ACCESS_TOKEN 또는 SUPABASE_DB_PASSWORD가 없어 마이그레이션을 건너뜁니다."
-            echo "GitHub → Settings → Secrets and variables → Actions 에 두 값을 추가하세요."
             exit 0
           fi
 
           supabase link --project-ref "$SUPABASE_PROJECT_ID" --password "$SUPABASE_DB_PASSWORD" --yes
+
+          # 공유 DB: 원격에만 있는 마이그레이션 SQL을 fetch해 로컬 히스토리와 동기화
+          supabase migration fetch --linked
+
           supabase migration list --linked
           supabase db push --dry-run --linked
           supabase db push --linked
