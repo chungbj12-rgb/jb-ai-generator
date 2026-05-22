@@ -67,12 +67,15 @@ export default function AuthForm() {
       setError("Supabase 설정이 필요합니다.");
       return;
     }
-    await supabase.auth.signInWithOAuth({
+    const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: `${window.location.origin}/generate`,
+        redirectTo: `${window.location.origin}/auth/callback?next=/generate`,
       },
     });
+    if (error) {
+      setError("Google 로그인에 실패했습니다. 설정을 확인해 주세요.");
+    }
   }
 
   return (
