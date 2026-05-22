@@ -41,7 +41,9 @@ export async function middleware(request: NextRequest) {
 
   if (
     !user &&
-    (pathname.startsWith("/generate") || pathname.startsWith("/history"))
+    (pathname.startsWith("/generate") ||
+      pathname.startsWith("/history") ||
+      pathname.startsWith("/admin"))
   ) {
     return NextResponse.redirect(new URL("/login", request.url));
   }

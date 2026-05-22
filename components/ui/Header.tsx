@@ -20,6 +20,7 @@ export default function Header({ userEmail }: HeaderProps) {
   const tabs = [
     { href: "/generate", label: "글 생성" },
     { href: "/history", label: "히스토리" },
+    { href: "/admin/guidelines", label: "⚙️ 지침 관리" },
   ];
 
   async function handleLogout() {

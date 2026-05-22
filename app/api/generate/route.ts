@@ -44,6 +44,22 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // DB에서 플랫폼별 최신 지침 조회 (실패 시 빈 문자열 폴백)
+    const { data: naverGuideline } = await supabase
+      .from("prompt_guidelines")
+      .select("content")
+      .eq("platform", "naver")
+      .single();
+
+    const { data: threadGuideline } = await supabase
+      .from("prompt_guidelines")
+      .select("content")
+      .eq("platform", "thread")
+      .single();
+
+    const naverGuidelineText = naverGuideline?.content ?? "";
+    const threadGuidelineText = threadGuideline?.content ?? "";
+
     let naverContent: string | null = null;
     let threadContent: string | null = null;
 
@@ -52,7 +68,12 @@ export async function POST(request: NextRequest) {
       const res = await anthropic.messages.create({
         model: CLAUDE_MODEL,
         max_tokens: MAX_TOKENS,
-        messages: [{ role: "user", content: buildNaverPrompt(topic, tone) }],
+        messages: [
+          {
+            role: "user",
+            content: buildNaverPrompt(topic, tone, naverGuidelineText),
+          },
+        ],
       });
       const block = res.content.find((b) => b.type === "text");
       naverContent = block?.type === "text" ? block.text : null;
@@ -63,7 +84,12 @@ export async function POST(request: NextRequest) {
       const res = await anthropic.messages.create({
         model: CLAUDE_MODEL,
         max_tokens: MAX_TOKENS,
-        messages: [{ role: "user", content: buildThreadPrompt(topic, tone) }],
+        messages: [
+          {
+            role: "user",
+            content: buildThreadPrompt(topic, tone, threadGuidelineText),
+          },
+        ],
       });
       const block = res.content.find((b) => b.type === "text");
       threadContent = block?.type === "text" ? block.text : null;

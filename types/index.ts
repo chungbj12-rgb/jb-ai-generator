@@ -37,3 +37,13 @@ export interface ToneOption {
   emoji: string;
   description: string;
 }
+
+/** DB prompt_guidelines 테이블 */
+export interface PromptGuideline {
+  id: string;
+  platform: Platform;
+  title: string;
+  content: string;
+  updated_at: string;
+  updated_by: string | null;
+}
