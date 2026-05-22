@@ -1,21 +1,23 @@
 import type { Metadata } from "next";
+import { Inter } from "next/font/google";
 import "./globals.css";
 
+const inter = Inter({ subsets: ["latin"] });
+
 export const metadata: Metadata = {
-  title: "AI 블로그 글 생성",
-  description: "주제와 톤에 맞는 블로그 글을 AI로 생성합니다",
+  title: "AI 블로그 생성기",
+  description:
+    "Claude AI로 네이버 블로그 & 쓰레드 글을 자동 생성하는 팀 도구",
 };
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
     <html lang="ko">
-      <body className="min-h-screen bg-gray-50 text-gray-900 antialiased">
-        {children}
-      </body>
+      <body className={`${inter.className} antialiased`}>{children}</body>
     </html>
   );
 }

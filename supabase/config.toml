@@ -1,0 +1,10 @@
+# Supabase CLI 설정 (supabase link 후 project_id 자동 채워짐)
+# https://supabase.com/docs/guides/cli
+
+project_id = "hcsgmnhhbsxudcdpzqhh"
+
+[api]
+enabled = true
+
+[db]
+major_version = 15
