@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Sparkles, Thermometer, Users } from "lucide-react";
 import { createClientSafe } from "@/lib/supabase/client";
 
@@ -9,12 +9,23 @@ type AuthMode = "login" | "signup";
 
 export default function AuthForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [mode, setMode] = useState<AuthMode>("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+
+  // Google OAuth 실패 시 URL 파라미터로 에러 표시
+  useEffect(() => {
+    const authError = searchParams.get("error");
+    if (authError === "google") {
+      setError(
+        "Google 로그인에 실패했습니다. Supabase Redirect URL 설정을 확인해 주세요.",
+      );
+    }
+  }, [searchParams]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
