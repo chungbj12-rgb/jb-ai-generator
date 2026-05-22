@@ -1,5 +1,5 @@
 export type Tone = "friendly" | "professional" | "emotional";
-export type Platform = "naver" | "thread" | "both";
+export type Platform = "naver" | "thread";
 
 export interface BlogPost {
   id: string;

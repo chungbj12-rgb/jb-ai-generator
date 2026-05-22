@@ -17,6 +17,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    if (platform !== "naver" && platform !== "thread") {
+      return NextResponse.json(
+        { error: "플랫폼은 네이버 또는 쓰레드 중 하나만 선택할 수 있습니다." },
+        { status: 400 },
+      );
+    }
+
     const supabase = await createClient();
     const {
       data: { user },
@@ -41,7 +48,7 @@ export async function POST(request: NextRequest) {
     let threadContent: string | null = null;
 
     // 네이버 글 생성
-    if (platform === "naver" || platform === "both") {
+    if (platform === "naver") {
       const res = await anthropic.messages.create({
         model: CLAUDE_MODEL,
         max_tokens: MAX_TOKENS,
@@ -52,7 +59,7 @@ export async function POST(request: NextRequest) {
     }
 
     // 쓰레드 글 생성
-    if (platform === "thread" || platform === "both") {
+    if (platform === "thread") {
       const res = await anthropic.messages.create({
         model: CLAUDE_MODEL,
         max_tokens: MAX_TOKENS,

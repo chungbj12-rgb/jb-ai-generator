@@ -149,40 +149,56 @@ export default function GenerateForm({
 
       <div className="border-t border-gray-100" />
 
-      {/* ── STEP 2: 플랫폼 선택 ── */}
+      {/* ── STEP 2: 플랫폼 선택 (radio — 하나만 선택) ── */}
       <div>
         <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-700">
           Step 2 · 플랫폼 선택
         </p>
-        <div className="grid grid-cols-2 gap-2">
-          <button
-            type="button"
-            onClick={() => handlePlatformSelect("naver")}
-            className={`flex items-center justify-center gap-2 rounded-lg border py-3 text-sm font-medium transition-all ${
+        <div
+          role="radiogroup"
+          aria-label="플랫폼 선택"
+          className="grid grid-cols-2 gap-2"
+        >
+          <label
+            className={`flex cursor-pointer items-center justify-center gap-2 rounded-lg border py-3 text-sm font-medium transition-all ${
               isNaverSelected
-                ? "border-indigo-300 bg-indigo-50 text-indigo-700"
-                : "border-gray-200 text-gray-500 hover:border-gray-300"
+                ? "border-indigo-500 bg-indigo-50 text-indigo-700 ring-2 ring-indigo-200"
+                : "border-gray-200 bg-white text-gray-400 hover:border-gray-300"
             }`}
           >
+            <input
+              type="radio"
+              name="platform"
+              value="naver"
+              checked={isNaverSelected}
+              onChange={() => handlePlatformSelect("naver")}
+              className="sr-only"
+            />
             <span className="text-base">📝</span> 네이버 블로그
             {isNaverSelected && (
-              <span className="text-xs text-indigo-400">✓</span>
+              <span className="text-xs font-bold text-indigo-600">✓</span>
             )}
-          </button>
-          <button
-            type="button"
-            onClick={() => handlePlatformSelect("thread")}
-            className={`flex items-center justify-center gap-2 rounded-lg border py-3 text-sm font-medium transition-all ${
+          </label>
+          <label
+            className={`flex cursor-pointer items-center justify-center gap-2 rounded-lg border py-3 text-sm font-medium transition-all ${
               isThreadSelected
-                ? "border-indigo-300 bg-indigo-50 text-indigo-700"
-                : "border-gray-200 text-gray-500 hover:border-gray-300"
+                ? "border-indigo-500 bg-indigo-50 text-indigo-700 ring-2 ring-indigo-200"
+                : "border-gray-200 bg-white text-gray-400 hover:border-gray-300"
             }`}
           >
+            <input
+              type="radio"
+              name="platform"
+              value="thread"
+              checked={isThreadSelected}
+              onChange={() => handlePlatformSelect("thread")}
+              className="sr-only"
+            />
             <span className="text-base">💬</span> 쓰레드
             {isThreadSelected && (
-              <span className="text-xs text-indigo-400">✓</span>
+              <span className="text-xs font-bold text-indigo-600">✓</span>
             )}
-          </button>
+          </label>
         </div>
       </div>
 
