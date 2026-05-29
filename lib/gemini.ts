@@ -37,27 +37,3 @@ export async function generateText(prompt: string): Promise<string> {
 
   return text;
 }
-
-/** JSON 형식 응답 요청 (주제 추천 등) */
-export async function generateJson(prompt: string): Promise<string> {
-  const ai = getClient();
-  if (!ai) {
-    throw new Error("GEMINI_API_KEY가 설정되지 않았습니다.");
-  }
-
-  const response = await ai.models.generateContent({
-    model: GEMINI_MODEL,
-    contents: prompt,
-    config: {
-      maxOutputTokens: MAX_OUTPUT_TOKENS,
-      responseMimeType: "application/json",
-    },
-  });
-
-  const text = response.text?.trim();
-  if (!text) {
-    throw new Error("Gemini가 빈 응답을 반환했습니다.");
-  }
-
-  return text;
-}
