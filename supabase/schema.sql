@@ -34,3 +34,5 @@ CREATE POLICY "로그인 유저 조회 가능" ON prompt_guidelines
   FOR SELECT USING (auth.role() = 'authenticated');
 CREATE POLICY "로그인 유저 수정 가능" ON prompt_guidelines
   FOR UPDATE USING (auth.role() = 'authenticated');
+CREATE POLICY "로그인 유저 삽입 가능" ON prompt_guidelines
+  FOR INSERT WITH CHECK (auth.role() = 'authenticated');

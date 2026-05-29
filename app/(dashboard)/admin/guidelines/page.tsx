@@ -29,8 +29,8 @@ export default async function GuidelinesPage() {
       <div className="mb-6">
         <h1 className="text-xl font-bold text-gray-900">프롬프트 지침 관리</h1>
         <p className="mt-1 text-sm text-gray-500">
-          네이버 블로그 SEO 최적화 및 쓰레드 바이럴 지침을 관리합니다. 저장
-          즉시 글 생성에 반영됩니다.
+          네이버 블로그 SEO 최적화 및 쓰레드 바이럴 지침을 관리합니다. 글자 수
+          제한 없이 저장되며, 저장 즉시 글 생성에 반영됩니다.
         </p>
       </div>
 
