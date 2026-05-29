@@ -33,7 +33,11 @@ export default function GenerateForm({
 
   // 플랫폼 단일 선택 (둘 중 하나만)
   const handlePlatformSelect = (selected: "naver" | "thread") => {
-    setForm((prev) => ({ ...prev, platform: selected }));
+    setForm((prev) => ({
+      ...prev,
+      platform: selected,
+      topic: inputMode === "suggest" ? "" : prev.topic,
+    }));
   };
 
   const isNaverSelected = form.platform === "naver";
@@ -106,7 +110,10 @@ export default function GenerateForm({
 
         {/* AI 추천 모드: TopicSuggester */}
         {inputMode === "suggest" && (
-          <TopicSuggester onSelectTopic={handleSelectTopic} />
+          <TopicSuggester
+            platform={form.platform}
+            onSelectTopic={handleSelectTopic}
+          />
         )}
 
         {/* 직접 입력 모드: textarea */}
@@ -130,7 +137,7 @@ export default function GenerateForm({
             <span className="flex-shrink-0 text-sm text-indigo-500">✓</span>
             <div className="min-w-0 flex-1">
               <p className="mb-0.5 text-[10px] font-medium text-indigo-500">
-                선택된 주제
+                {isNaverSelected ? "선택된 제목" : "선택된 주제"}
               </p>
               <p className="text-sm leading-snug text-indigo-800">
                 {form.topic}

@@ -5,6 +5,7 @@ CREATE TABLE IF NOT EXISTS blog_posts (
   tone           TEXT        NOT NULL,
   naver_content  TEXT,
   thread_content TEXT,
+  naver_hashtags TEXT[],
   created_at     TIMESTAMPTZ DEFAULT NOW() NOT NULL
 );
 

@@ -2,6 +2,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { generateText, isGeminiConfigured } from "@/lib/gemini";
+import { generateNaverHashtags } from "@/lib/naver-hashtags";
 import { buildNaverPrompt, buildThreadPrompt } from "@/lib/prompts";
 import { GenerateRequest } from "@/types";
 
@@ -62,11 +63,13 @@ export async function POST(request: NextRequest) {
 
     let naverContent: string | null = null;
     let threadContent: string | null = null;
+    let naverHashtags: string[] | null = null;
 
     if (platform === "naver") {
       naverContent = await generateText(
         buildNaverPrompt(topic, tone, naverGuidelineText),
       );
+      naverHashtags = await generateNaverHashtags(topic, naverContent);
     }
 
     if (platform === "thread") {
@@ -83,6 +86,7 @@ export async function POST(request: NextRequest) {
         tone,
         naver_content: naverContent,
         thread_content: threadContent,
+        naver_hashtags: naverHashtags,
       })
       .select()
       .single();
@@ -99,6 +103,7 @@ export async function POST(request: NextRequest) {
       id: savedPost.id,
       naver_content: naverContent ?? undefined,
       thread_content: threadContent ?? undefined,
+      naver_hashtags: naverHashtags ?? undefined,
     });
   } catch (error) {
     console.error("글 생성 오류:", error);

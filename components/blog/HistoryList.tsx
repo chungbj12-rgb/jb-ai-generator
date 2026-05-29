@@ -175,7 +175,11 @@ export default function HistoryList({ posts, authorEmail }: HistoryListProps) {
             </div>
             <div className="space-y-4">
               {viewPost.naver_content && (
-                <ResultCard platform="naver" content={viewPost.naver_content} />
+                <ResultCard
+                  platform="naver"
+                  content={viewPost.naver_content}
+                  hashtags={viewPost.naver_hashtags ?? undefined}
+                />
               )}
               {viewPost.thread_content && (
                 <ResultCard

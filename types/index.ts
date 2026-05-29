@@ -8,6 +8,7 @@ export interface BlogPost {
   tone: Tone;
   naver_content: string | null;
   thread_content: string | null;
+  naver_hashtags?: string[] | null;
   created_at: string;
   user_email?: string;
 }
@@ -22,7 +23,13 @@ export interface GenerateResponse {
   id?: string;
   naver_content?: string;
   thread_content?: string;
+  naver_hashtags?: string[];
   error?: string;
+}
+
+export interface SuggestTopicsRequest {
+  keyword: string;
+  platform?: Platform;
 }
 
 export interface GenerateFormState {

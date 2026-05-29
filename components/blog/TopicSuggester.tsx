@@ -1,20 +1,32 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Loader2, Sparkles } from "lucide-react";
+import { Platform } from "@/types";
 
 interface TopicSuggesterProps {
+  platform: Platform;
   onSelectTopic: (topic: string) => void;
 }
 
-/** 키워드 기반 AI 주제 추천 컴포넌트 */
-export default function TopicSuggester({ onSelectTopic }: TopicSuggesterProps) {
+/** 키워드 기반 AI 제목/주제 추천 */
+export default function TopicSuggester({
+  platform,
+  onSelectTopic,
+}: TopicSuggesterProps) {
   const [keyword, setKeyword] = useState("");
   const [topics, setTopics] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  /** /api/suggest-topics 호출 */
+  const isNaver = platform === "naver";
+
+  // 플랫폼 변경 시 이전 추천 목록 초기화
+  useEffect(() => {
+    setTopics([]);
+    setError(null);
+  }, [platform]);
+
   async function handleSuggest() {
     const trimmed = keyword.trim();
     if (!trimmed) {
@@ -30,19 +42,23 @@ export default function TopicSuggester({ onSelectTopic }: TopicSuggesterProps) {
       const res = await fetch("/api/suggest-topics", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ keyword: trimmed }),
+        body: JSON.stringify({ keyword: trimmed, platform }),
       });
 
       const data = await res.json();
 
       if (!res.ok) {
-        setError(data.error ?? "주제 추천에 실패했습니다.");
+        setError(data.error ?? "추천에 실패했습니다.");
         return;
       }
 
       setTopics(data.topics ?? []);
       if (!data.topics?.length) {
-        setError("추천 주제가 없습니다. 다른 키워드를 시도해 보세요.");
+        setError(
+          isNaver
+            ? "추천 제목이 없습니다. 다른 키워드를 시도해 보세요."
+            : "추천 주제가 없습니다. 다른 키워드를 시도해 보세요.",
+        );
       }
     } catch {
       setError("네트워크 오류가 발생했습니다.");
@@ -53,6 +69,11 @@ export default function TopicSuggester({ onSelectTopic }: TopicSuggesterProps) {
 
   return (
     <div className="space-y-3">
+      <p className="text-[11px] text-gray-500">
+        {isNaver
+          ? "네이버 상위노출에 유리한 제목 10개를 추천합니다."
+          : "쓰레드용 주제 5개를 추천합니다."}
+      </p>
       <div className="flex gap-2">
         <input
           type="text"
@@ -78,7 +99,7 @@ export default function TopicSuggester({ onSelectTopic }: TopicSuggesterProps) {
           ) : (
             <Sparkles className="h-3.5 w-3.5" />
           )}
-          추천받기
+          {isNaver ? "제목 추천" : "주제 추천"}
         </button>
       </div>
 
@@ -89,19 +110,27 @@ export default function TopicSuggester({ onSelectTopic }: TopicSuggesterProps) {
       )}
 
       {topics.length > 0 && (
-        <ul className="space-y-2">
-          {topics.map((topic) => (
-            <li key={topic}>
-              <button
-                type="button"
-                onClick={() => onSelectTopic(topic)}
-                className="w-full rounded-lg border border-gray-200 px-3 py-2.5 text-left text-sm text-gray-800 transition-colors hover:border-indigo-300 hover:bg-indigo-50 hover:text-indigo-800"
-              >
-                {topic}
-              </button>
-            </li>
-          ))}
-        </ul>
+        <div>
+          <p className="mb-2 text-[10px] font-semibold uppercase tracking-wide text-gray-500">
+            {isNaver ? `추천 제목 (${topics.length}개)` : `추천 주제 (${topics.length}개)`}
+          </p>
+          <ul className="max-h-64 space-y-2 overflow-y-auto">
+            {topics.map((topic, i) => (
+              <li key={`${topic}-${i}`}>
+                <button
+                  type="button"
+                  onClick={() => onSelectTopic(topic)}
+                  className="w-full rounded-lg border border-gray-200 px-3 py-2.5 text-left text-sm text-gray-800 transition-colors hover:border-indigo-300 hover:bg-indigo-50 hover:text-indigo-800"
+                >
+                  <span className="mr-2 text-[10px] font-bold text-indigo-400">
+                    {i + 1}
+                  </span>
+                  {topic}
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
       )}
     </div>
   );

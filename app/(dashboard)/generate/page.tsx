@@ -50,7 +50,11 @@ export default function GeneratePage() {
             </h2>
             <div className="grid gap-4 lg:grid-cols-2">
               {result.naver_content && (
-                <ResultCard platform="naver" content={result.naver_content} />
+                <ResultCard
+                  platform="naver"
+                  content={result.naver_content}
+                  hashtags={result.naver_hashtags}
+                />
               )}
               {result.thread_content && (
                 <ResultCard platform="thread" content={result.thread_content} />

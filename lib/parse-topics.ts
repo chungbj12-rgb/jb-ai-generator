@@ -8,8 +8,8 @@ function stripCodeFence(text: string): string {
     .trim();
 }
 
-/** 텍스트에서 주제 문자열 배열 파싱 (실패 시 null) */
-export function parseTopicsFromText(text: string): string[] | null {
+/** 텍스트에서 JSON 문자열 배열 파싱 (실패 시 null) */
+export function parseTopicsFromText(text: string, limit = 5): string[] | null {
   const cleaned = stripCodeFence(text);
 
   const tryParse = (raw: string): string[] | null => {
@@ -22,8 +22,8 @@ export function parseTopicsFromText(text: string): string[] | null {
             .trim()
             .replace(/^["'`]+|["'`,]+$/g, ""),
         )
-        .filter((s) => s.length > 5 && s !== "```json" && !s.startsWith("```"));
-      return topics.length > 0 ? topics.slice(0, 5) : null;
+        .filter((s) => s.length > 2 && s !== "```json" && !s.startsWith("```"));
+      return topics.length > 0 ? topics.slice(0, limit) : null;
     } catch {
       return null;
     }
@@ -50,5 +50,5 @@ export function parseTopicsFromText(text: string): string[] | null {
         !l.startsWith("["),
     );
 
-  return lines.length > 0 ? lines.slice(0, 5) : null;
+  return lines.length > 0 ? lines.slice(0, limit) : null;
 }
