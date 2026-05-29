@@ -7,7 +7,7 @@ const inter = Inter({ subsets: ["latin"] });
 export const metadata: Metadata = {
   title: "AI 블로그 생성기",
   description:
-    "Claude AI로 네이버 블로그 & 쓰레드 글을 자동 생성하는 팀 도구",
+    "Gemini AI로 네이버 블로그 & 쓰레드 글을 자동 생성하는 팀 도구",
 };
 
 export default function RootLayout({

@@ -1,7 +1,7 @@
-// Claude API 호출 → 글 생성 → Supabase 저장 API 엔드포인트
+// Gemini API 호출 → 글 생성 → Supabase 저장 API 엔드포인트
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { anthropic, CLAUDE_MODEL, MAX_TOKENS } from "@/lib/anthropic";
+import { generateText, isGeminiConfigured } from "@/lib/gemini";
 import { buildNaverPrompt, buildThreadPrompt } from "@/lib/prompts";
 import { GenerateRequest } from "@/types";
 
@@ -37,9 +37,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!process.env.ANTHROPIC_API_KEY) {
+    if (!isGeminiConfigured()) {
       return NextResponse.json(
-        { error: "ANTHROPIC_API_KEY가 설정되지 않았습니다." },
+        { error: "GEMINI_API_KEY가 설정되지 않았습니다." },
         { status: 503 },
       );
     }
@@ -63,39 +63,18 @@ export async function POST(request: NextRequest) {
     let naverContent: string | null = null;
     let threadContent: string | null = null;
 
-    // 네이버 글 생성
     if (platform === "naver") {
-      const res = await anthropic.messages.create({
-        model: CLAUDE_MODEL,
-        max_tokens: MAX_TOKENS,
-        messages: [
-          {
-            role: "user",
-            content: buildNaverPrompt(topic, tone, naverGuidelineText),
-          },
-        ],
-      });
-      const block = res.content.find((b) => b.type === "text");
-      naverContent = block?.type === "text" ? block.text : null;
+      naverContent = await generateText(
+        buildNaverPrompt(topic, tone, naverGuidelineText),
+      );
     }
 
-    // 쓰레드 글 생성
     if (platform === "thread") {
-      const res = await anthropic.messages.create({
-        model: CLAUDE_MODEL,
-        max_tokens: MAX_TOKENS,
-        messages: [
-          {
-            role: "user",
-            content: buildThreadPrompt(topic, tone, threadGuidelineText),
-          },
-        ],
-      });
-      const block = res.content.find((b) => b.type === "text");
-      threadContent = block?.type === "text" ? block.text : null;
+      threadContent = await generateText(
+        buildThreadPrompt(topic, tone, threadGuidelineText),
+      );
     }
 
-    // DB 저장
     const { data: savedPost, error: dbError } = await supabase
       .from("blog_posts")
       .insert({
@@ -123,8 +102,10 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error("글 생성 오류:", error);
+    const message =
+      error instanceof Error ? error.message : "글 생성 중 오류가 발생했습니다.";
     return NextResponse.json(
-      { error: "글 생성 중 오류가 발생했습니다." },
+      { error: message.includes("GEMINI") ? message : "글 생성 중 오류가 발생했습니다." },
       { status: 500 },
     );
   }

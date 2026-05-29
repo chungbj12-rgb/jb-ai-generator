@@ -217,7 +217,7 @@ export default function AuthForm() {
 /** 로그인 페이지 좌측 브랜딩 패널 */
 export function LoginBrandPanel() {
   const features = [
-    { icon: Sparkles, text: "Claude AI 기반 콘텐츠 생성" },
+    { icon: Sparkles, text: "Gemini AI 기반 콘텐츠 생성" },
     { icon: Users, text: "팀원과 히스토리 공유" },
     { icon: Thermometer, text: "3가지 톤 선택 가능" },
   ];

@@ -1,6 +1,6 @@
-// Claude API로 블로그 주제 추천
+// Gemini API로 블로그 주제 추천
 import { NextRequest, NextResponse } from "next/server";
-import { anthropic, CLAUDE_MODEL, MAX_TOKENS } from "@/lib/anthropic";
+import { generateText, isGeminiConfigured } from "@/lib/gemini";
 
 /** API 키 없을 때 사용하는 샘플 주제 */
 function mockTopics(keyword: string): string[] {
@@ -25,28 +25,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!process.env.ANTHROPIC_API_KEY) {
+    if (!isGeminiConfigured()) {
       await new Promise((r) => setTimeout(r, 800));
       return NextResponse.json({ topics: mockTopics(keyword) });
     }
 
-    const res = await anthropic.messages.create({
-      model: CLAUDE_MODEL,
-      max_tokens: MAX_TOKENS,
-      messages: [
-        {
-          role: "user",
-          content: `키워드: "${keyword}"
+    const text = await generateText(`키워드: "${keyword}"
 
 위 키워드로 네이버 블로그·쓰레드에 적합한 글 주제 5개를 추천해 주세요.
 각 주제는 한 줄로, 클릭해서 바로 글 생성에 쓸 수 있게 구체적으로 작성하세요.
-JSON 배열만 반환하세요. 예: ["주제1", "주제2", "주제3", "주제4", "주제5"]`,
-        },
-      ],
-    });
-
-    const block = res.content.find((b) => b.type === "text");
-    const text = block?.type === "text" ? block.text.trim() : "";
+JSON 배열만 반환하세요. 예: ["주제1", "주제2", "주제3", "주제4", "주제5"]`);
 
     try {
       const parsed = JSON.parse(text) as string[];
@@ -54,7 +42,6 @@ JSON 배열만 반환하세요. 예: ["주제1", "주제2", "주제3", "주제4"
         return NextResponse.json({ topics: parsed.slice(0, 5) });
       }
     } catch {
-      // JSON 파싱 실패 시 줄 단위로 추출
       const lines = text
         .split("\n")
         .map((l) => l.replace(/^[\d.\-"'\s]+/, "").trim())

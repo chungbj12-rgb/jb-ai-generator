@@ -1,4 +1,4 @@
-// Claude API에 전달할 플랫폼별 프롬프트 빌더
+// Gemini API에 전달할 플랫폼별 프롬프트 빌더
 import { Tone } from "@/types";
 
 const TONE_DESCRIPTION: Record<Tone, string> = {
