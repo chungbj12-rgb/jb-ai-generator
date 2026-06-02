@@ -1,9 +1,10 @@
 // Gemini API 호출 → 글 생성 → Supabase 저장 API 엔드포인트
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { generateText, isGeminiConfigured } from "@/lib/gemini";
+import { generateBlogText, isGeminiConfigured } from "@/lib/gemini";
+import { generateNaverBlogContent } from "@/lib/naver-content";
 import { generateNaverHashtags } from "@/lib/naver-hashtags";
-import { buildNaverPrompt, buildThreadPrompt } from "@/lib/prompts";
+import { buildThreadPrompt } from "@/lib/prompts";
 import { GenerateRequest } from "@/types";
 
 export async function POST(request: NextRequest) {
@@ -66,14 +67,16 @@ export async function POST(request: NextRequest) {
     let naverHashtags: string[] | null = null;
 
     if (platform === "naver") {
-      naverContent = await generateText(
-        buildNaverPrompt(topic, tone, naverGuidelineText),
+      naverContent = await generateNaverBlogContent(
+        topic,
+        tone,
+        naverGuidelineText,
       );
       naverHashtags = await generateNaverHashtags(topic, naverContent);
     }
 
     if (platform === "thread") {
-      threadContent = await generateText(
+      threadContent = await generateBlogText(
         buildThreadPrompt(topic, tone, threadGuidelineText),
       );
     }
