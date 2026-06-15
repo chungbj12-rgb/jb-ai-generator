@@ -9,6 +9,8 @@
     "lint": "next lint",
     "agent": "tsx agent/run.ts",
     "agent:login": "tsx agent/run.ts --login",
+    "agent:config": "tsx scripts/sync-agent-config.ts",
+    "agent:prepare": "tsx scripts/sync-agent-config.ts && tsx agent/run.ts --config agent.config.local.json --prepare-only",
     "postinstall": "playwright install chromium"
   },
   "dependencies": {

@@ -1,10 +1,11 @@
 #!/usr/bin/env node
 /**
  * 네이버 블로그 자동화 에이전트 CLI
- *
- * npm run agent -- --config agent.config.local.json
- * npm run agent -- --job-id <uuid> --config agent.config.local.json
  */
+import { loadEnvLocal } from "@/lib/agent/load-env";
+
+loadEnvLocal();
+
 import path from "path";
 import fs from "fs/promises";
 import { prepareAgentJob, loadManifest } from "@/lib/agent/orchestrator";
