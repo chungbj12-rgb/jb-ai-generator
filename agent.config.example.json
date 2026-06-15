@@ -1,0 +1,16 @@
+{
+  "naverId": "your_naver_id",
+  "naverPassword": "your_naver_password",
+  "blogId": "your_blog_id",
+  "topic": "성수동 감성 카페 추천 — 주말 데이트 코스",
+  "ctaText": "더 많은 맛집·카페 정보가 궁금하다면 아래 버튼을 눌러 확인해 보세요!",
+  "ctaButtonText": "추천 장소 더 보기",
+  "ctaButtonLink": "https://example.com/landing",
+  "textModel": "gemini-2.5-flash",
+  "imageModel": "imagen-4.0-generate-001",
+  "apiKey": "",
+  "geminiApiKey": "",
+  "openaiApiKey": "",
+  "tone": "friendly",
+  "imageCount": 7
+}

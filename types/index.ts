@@ -54,3 +54,12 @@ export interface PromptGuideline {
   updated_at: string;
   updated_by: string | null;
 }
+
+export type {
+  AgentJob,
+  AgentJobStatus,
+  AgentPayload,
+  BlogBlock,
+  PrepareAgentRequest,
+  PrepareAgentResponse,
+} from "@/types/agent";
