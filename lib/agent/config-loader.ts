@@ -28,6 +28,8 @@ export function loadConfigFromEnv(): Partial<AgentRunConfig> {
   assign("naverPassword", process.env.NAVER_PASSWORD);
   assign("blogId", process.env.NAVER_BLOG_ID);
   assign("topic", process.env.AGENT_TOPIC);
+  assign("keyword", process.env.AGENT_KEYWORD);
+  assign("firstSentence", process.env.AGENT_FIRST_SENTENCE);
   assign("ctaText", process.env.AGENT_CTA_TEXT);
   assign("ctaButtonText", process.env.AGENT_CTA_BUTTON_TEXT);
   assign("ctaButtonLink", process.env.AGENT_CTA_BUTTON_LINK);

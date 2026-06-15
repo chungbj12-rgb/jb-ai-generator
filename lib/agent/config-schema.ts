@@ -5,6 +5,8 @@ export const agentRunConfigSchema = z.object({
   naverPassword: z.string().min(1, "네이버 비밀번호는 필수입니다."),
   blogId: z.string().min(1, "블로그 ID는 필수입니다."),
   topic: z.string().min(1, "글 주제는 필수입니다."),
+  keyword: z.string().min(1, "주제 키워드는 필수입니다."),
+  firstSentence: z.string().min(1, "첫 문장은 필수입니다."),
   ctaText: z.string().min(1, "CTA 문구는 필수입니다."),
   ctaButtonText: z.string().min(1, "CTA 버튼 문구는 필수입니다."),
   ctaButtonLink: z.string().url("CTA 버튼 링크는 URL 형식이어야 합니다."),

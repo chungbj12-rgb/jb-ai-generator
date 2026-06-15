@@ -17,6 +17,10 @@ export interface AgentRunConfig {
   naverPassword: string;
   blogId: string;
   topic: string;
+  /** 구매직전 키워드 — 본문에 정확히 5회 반복 */
+  keyword: string;
+  /** 본문 첫 문장 (반드시 이 문장으로 시작) */
+  firstSentence: string;
   ctaText: string;
   ctaButtonText: string;
   ctaButtonLink: string;

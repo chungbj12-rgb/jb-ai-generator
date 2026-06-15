@@ -46,6 +46,8 @@ export default function AutomateForm() {
     naverPassword: "",
     blogId: "",
     topic: "",
+    keyword: "",
+    firstSentence: "",
     ctaText: "",
     ctaButtonText: "",
     ctaButtonLink: "",
@@ -162,17 +164,50 @@ export default function AutomateForm() {
 
         <section>
           <h3 className="mb-3 text-sm font-semibold text-gray-900">콘텐츠</h3>
-          <label className="mb-1 block text-xs text-gray-500">글 주제</label>
-          <textarea
-            className={inputClass}
-            rows={3}
-            value={form.topic}
-            onChange={(e) => update("topic", e.target.value)}
-            required
-          />
+          <div className="grid gap-3">
+            <div>
+              <label className="mb-1 block text-xs text-gray-500">글 주제</label>
+              <textarea
+                className={inputClass}
+                rows={2}
+                placeholder="예: 용인 수지구 초등·중학생 배구학원 선택 가이드"
+                value={form.topic}
+                onChange={(e) => update("topic", e.target.value)}
+                required
+              />
+            </div>
+            <div>
+              <label className="mb-1 block text-xs text-gray-500">
+                주제 키워드 (본문에 정확히 5회 반복)
+              </label>
+              <input
+                className={inputClass}
+                placeholder="예: 용인배구학원"
+                value={form.keyword}
+                onChange={(e) => update("keyword", e.target.value)}
+                required
+              />
+            </div>
+            <div>
+              <label className="mb-1 block text-xs text-gray-500">
+                첫 문장 (본문이 반드시 이 문장으로 시작)
+              </label>
+              <textarea
+                className={inputClass}
+                rows={2}
+                placeholder="예: 용인 수지구에서 배구학원을 알아보고 계신 학부모님..."
+                value={form.firstSentence}
+                onChange={(e) => update("firstSentence", e.target.value)}
+                required
+              />
+            </div>
+          </div>
           <div className="mt-3">
             <ToneSelector value={form.tone} onChange={(t) => update("tone", t)} />
           </div>
+          <p className="mt-2 text-xs text-gray-500">
+            고정 규칙: 본문 1,500자 이상 · 키워드 5회 · 첫 문장 고정 · 전문체 · CTA 마지막 배치 · 미충족 시 최대 3회 자동 재생성
+          </p>
         </section>
 
         <section>

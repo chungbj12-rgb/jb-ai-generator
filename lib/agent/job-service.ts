@@ -78,6 +78,8 @@ export async function prepareJobAssets(
 
   const payload = await planBlogContent({
     topic: config.topic,
+    keyword: config.keyword,
+    firstSentence: config.firstSentence,
     tone,
     guideline,
     imageCount: config.imageCount,

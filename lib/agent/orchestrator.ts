@@ -40,6 +40,8 @@ export async function prepareAgentJob(
 
   let payload = await planBlogContent({
     topic: config.topic,
+    keyword: config.keyword,
+    firstSentence: config.firstSentence,
     tone,
     guideline,
     imageCount: config.imageCount,
