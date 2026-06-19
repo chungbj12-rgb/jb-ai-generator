@@ -2,6 +2,7 @@
 import {
   generateBlogText as generateGeminiBlogText,
   generateText as generateGeminiText,
+  generateTextWithSystem as generateGeminiTextWithSystem,
   isGeminiConfigured,
 } from "@/lib/gemini";
 
@@ -45,6 +46,16 @@ async function callOpenAI(
   prompt: string,
   maxCompletionTokens: number,
 ): Promise<string> {
+  return callOpenAIWithMessages(
+    [{ role: "user", content: prompt }],
+    maxCompletionTokens,
+  );
+}
+
+async function callOpenAIWithMessages(
+  messages: Array<{ role: "system" | "user"; content: string }>,
+  maxCompletionTokens: number,
+): Promise<string> {
   const apiKey = process.env.OPENAI_API_KEY?.trim();
   if (!apiKey) throw new Error("OPENAI_API_KEY가 설정되지 않았습니다.");
 
@@ -59,7 +70,7 @@ async function callOpenAI(
       },
       body: JSON.stringify({
         model: OPENAI_TEXT_MODEL,
-        messages: [{ role: "user", content: prompt }],
+        messages,
         max_completion_tokens: maxCompletionTokens,
         reasoning_effort: "none",
       }),
@@ -105,4 +116,26 @@ export async function generateBlogText(
     return callOpenAI(prompt, OPENAI_BLOG_MAX_COMPLETION_TOKENS);
   }
   return generateGeminiBlogText(prompt);
+}
+
+/** 쓰레드 — system 프롬프트 분리 생성 */
+export async function generateThreadText(
+  systemPrompt: string,
+  userPrompt: string,
+  provider: TextProvider = "gemini",
+): Promise<string> {
+  if (provider === "openai") {
+    return callOpenAIWithMessages(
+      [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: userPrompt },
+      ],
+      OPENAI_SHORT_MAX_COMPLETION_TOKENS,
+    );
+  }
+  return generateGeminiTextWithSystem(systemPrompt, userPrompt, {
+    maxOutputTokens: OPENAI_SHORT_MAX_COMPLETION_TOKENS,
+    thinkingBudget: 0,
+    retries: 2,
+  });
 }

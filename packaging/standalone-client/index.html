@@ -148,9 +148,31 @@
                 />
               </div>
 
+              <div id="thread-account-step" class="step-block hidden-step">
+                <p class="step-label">Step 3 · 계정 타입</p>
+                <div class="platform-grid">
+                  <button
+                    type="button"
+                    class="platform-btn"
+                    data-account="personal"
+                    id="account-personal"
+                  >
+                    개인 브랜드 (정봉진)
+                  </button>
+                  <button
+                    type="button"
+                    class="platform-btn active"
+                    data-account="center"
+                    id="account-center"
+                  >
+                    센터 공식 (JB스포츠)
+                  </button>
+                </div>
+              </div>
+
               <div id="common-step" class="step-block hidden-step">
-                <div class="field">
-                  <label for="input-tone">톤</label>
+                <div id="tone-field" class="field">
+                  <label for="input-tone">톤 (블로그)</label>
                   <select id="input-tone">
                     <option value="friendly">친근한</option>
                     <option value="professional">전문적인</option>

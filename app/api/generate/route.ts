@@ -2,14 +2,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getApiAuth } from "@/lib/supabase/api-auth";
 import {
-  generateBlogText,
+  generateThreadText,
   isProviderConfigured,
   type TextProvider,
 } from "@/lib/llm";
 import { generateNaverBlogContent } from "@/lib/naver-content";
 import { generateNaverHashtags } from "@/lib/naver-hashtags";
 import { resolveNaverGuideline } from "@/lib/prompts/resolve-naver-guideline";
-import { buildThreadPrompt } from "@/lib/prompts";
+import {
+  buildThreadSystemPrompt,
+  normalizeThreadAccountType,
+  THREAD_USER_PROMPT,
+} from "@/lib/prompts/threadsPrompts";
 import { GenerateRequest } from "@/types";
 
 export const maxDuration = 300;
@@ -21,25 +25,34 @@ export async function OPTIONS() {
 export async function POST(request: NextRequest) {
   try {
     const body: GenerateRequest = await request.json();
-    const { tone, platform } = body;
+    const { platform } = body;
+    const tone = body.tone ?? "friendly";
     const textProvider: TextProvider =
       body.textProvider === "openai" ? "openai" : "gemini";
     const keyword = String(body.keyword ?? "").trim();
     const topicInput = String(body.topic ?? "").trim();
+    const accountType = normalizeThreadAccountType(body.accountType);
 
     const topic =
-      platform === "thread"
-        ? topicInput || keyword
-        : topicInput;
+      platform === "thread" ? topicInput || keyword : topicInput;
 
-    if (!topic || !tone || !platform) {
+    if (!platform) {
       return NextResponse.json(
-        {
-          error:
-            platform === "thread"
-              ? "키워드, 톤, 플랫폼은 필수 입력 항목입니다."
-              : "주제, 톤, 플랫폼은 필수 입력 항목입니다.",
-        },
+        { error: "플랫폼은 필수 입력 항목입니다." },
+        { status: 400 },
+      );
+    }
+
+    if (platform === "thread") {
+      if (!topic) {
+        return NextResponse.json(
+          { error: "키워드는 필수 입력 항목입니다." },
+          { status: 400 },
+        );
+      }
+    } else if (!topic || !tone) {
+      return NextResponse.json(
+        { error: "주제, 톤, 플랫폼은 필수 입력 항목입니다." },
         { status: 400 },
       );
     }
@@ -71,14 +84,6 @@ export async function POST(request: NextRequest) {
 
     const naverGuidelineText = await resolveNaverGuideline(supabase);
 
-    const { data: threadGuideline } = await supabase
-      .from("prompt_guidelines")
-      .select("content")
-      .eq("platform", "thread")
-      .single();
-
-    const threadGuidelineText = threadGuideline?.content ?? "";
-
     let naverContent: string | null = null;
     let threadContent: string | null = null;
     let naverHashtags: string[] | null = null;
@@ -99,10 +104,10 @@ export async function POST(request: NextRequest) {
     }
 
     if (platform === "thread") {
-      threadContent = await generateBlogText(
-        buildThreadPrompt(threadSubject, tone, threadGuidelineText, {
-          fromKeyword: Boolean(keyword),
-        }),
+      const systemPrompt = buildThreadSystemPrompt(accountType, threadSubject);
+      threadContent = await generateThreadText(
+        systemPrompt,
+        THREAD_USER_PROMPT,
         textProvider,
       );
     }
@@ -131,11 +136,12 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       id: savedPost.id,
-      topic,
+      topic: platform === "thread" ? threadSubject : topic,
       naver_content: naverContent ?? undefined,
       thread_content: threadContent ?? undefined,
       naver_hashtags: naverHashtags ?? undefined,
       textProvider,
+      accountType: platform === "thread" ? accountType : undefined,
     });
   } catch (error) {
     console.error("글 생성 오류:", error);

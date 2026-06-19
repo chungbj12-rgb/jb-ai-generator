@@ -103,6 +103,53 @@ export async function generateText(
   throw new Error(toUserFriendlyError(lastError));
 }
 
+/** system + user 메시지로 텍스트 생성 */
+export async function generateTextWithSystem(
+  systemPrompt: string,
+  userPrompt: string,
+  options?: GenerateTextOptions,
+): Promise<string> {
+  const ai = getClient();
+  if (!ai) {
+    throw new Error("GEMINI_API_KEY가 설정되지 않았습니다.");
+  }
+
+  const maxOutputTokens = options?.maxOutputTokens ?? MAX_OUTPUT_TOKENS;
+  const thinkingBudget = options?.thinkingBudget ?? 0;
+  const retries = options?.retries ?? 2;
+  let lastError: unknown;
+
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      const response = await ai.models.generateContent({
+        model: GEMINI_MODEL,
+        contents: userPrompt,
+        config: {
+          maxOutputTokens,
+          thinkingConfig: { thinkingBudget },
+          systemInstruction: systemPrompt,
+        },
+      });
+
+      const text = response.text?.trim();
+      if (!text) {
+        throw new Error("Gemini가 빈 응답을 반환했습니다.");
+      }
+
+      return text;
+    } catch (error) {
+      lastError = error;
+      if (attempt < retries && isRetryableError(error)) {
+        await sleep(1000 * (attempt + 1));
+        continue;
+      }
+      break;
+    }
+  }
+
+  throw new Error(toUserFriendlyError(lastError));
+}
+
 /** 네이버/쓰레드 블로그 본문 생성용 */
 export function generateBlogText(prompt: string): Promise<string> {
   return generateText(prompt, {

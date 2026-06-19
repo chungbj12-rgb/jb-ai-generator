@@ -76,12 +76,26 @@
                 <input id="thread-keyword" type="text" placeholder="키워드만 입력" />
               </div>
 
+              <div id="thread-account-step" class="step-block hidden-step">
+                <p class="step-label">Step 3 · 계정 타입</p>
+                <div class="platform-grid">
+                  <button type="button" class="platform-btn" id="account-personal">
+                    개인 (정봉진)
+                  </button>
+                  <button type="button" class="platform-btn active" id="account-center">
+                    센터 (JB스포츠)
+                  </button>
+                </div>
+              </div>
+
               <div id="common-step" class="step-block hidden-step">
-                <select id="input-tone">
-                  <option value="friendly">친근한</option>
-                  <option value="professional">전문적인</option>
-                  <option value="emotional">감성적인</option>
-                </select>
+                <div id="tone-field" class="field">
+                  <select id="input-tone">
+                    <option value="friendly">친근한</option>
+                    <option value="professional">전문적인</option>
+                    <option value="emotional">감성적인</option>
+                  </select>
+                </div>
                 <div id="cta-field" class="field">
                   <textarea id="input-cta" rows="2" placeholder="CTA (블로그)"></textarea>
                 </div>

@@ -167,12 +167,12 @@
     });
   }
 
-  async function generateThread({ keyword, tone }) {
+  async function generateThread({ keyword, accountType }) {
     return apiFetch("/api/generate", {
       platform: "thread",
       keyword,
       topic: keyword,
-      tone: tone || "friendly",
+      accountType: accountType || "center",
       textProvider: "gemini",
     });
   }
@@ -193,6 +193,7 @@
       blogMode: "suggest",
       selectedTopic: "",
       blogKeyword: "",
+      threadAccountType: "center",
     };
 
     const loginSection = $("login-section");
@@ -226,8 +227,14 @@
 
       $("blog-step")?.classList.toggle("hidden-step", platform !== "naver");
       $("thread-step")?.classList.toggle("hidden-step", platform !== "thread");
-      $("common-step")?.classList.toggle("hidden-step", !platform);
-      $("cta-field")?.classList.toggle("hidden", platform !== "naver");
+      $("thread-account-step")?.classList.toggle(
+        "hidden-step",
+        platform !== "thread",
+      );
+      $("common-step")?.classList.toggle(
+        "hidden-step",
+        !platform || platform === "thread",
+      );
 
       if ($("topic-list")) $("topic-list").innerHTML = "";
       if ($("selected-topic")) {
@@ -338,6 +345,16 @@
 
     $("platform-naver")?.addEventListener("click", () => setPlatform("naver"));
     $("platform-thread")?.addEventListener("click", () => setPlatform("thread"));
+    $("account-personal")?.addEventListener("click", () => {
+      ui.threadAccountType = "personal";
+      $("account-personal")?.classList.add("active");
+      $("account-center")?.classList.remove("active");
+    });
+    $("account-center")?.addEventListener("click", () => {
+      ui.threadAccountType = "center";
+      $("account-center")?.classList.add("active");
+      $("account-personal")?.classList.remove("active");
+    });
     $("mode-suggest")?.addEventListener("click", () => setBlogMode("suggest"));
     $("mode-manual")?.addEventListener("click", () => setBlogMode("manual"));
 
@@ -427,7 +444,10 @@
         const data =
           ui.platform === "naver"
             ? await generateBlog({ keyword, topic, customCta, tone })
-            : await generateThread({ keyword, tone });
+            : await generateThread({
+                keyword,
+                accountType: ui.threadAccountType,
+              });
 
         hideStatus(statusEl);
 
@@ -447,7 +467,11 @@
               .join(" · ");
           }
         } else {
-          resultLabel = `쓰레드 · ${keyword}`;
+          resultLabel = `쓰레드 · ${keyword} (${
+            ui.threadAccountType === "personal"
+              ? "개인 브랜드"
+              : "센터 공식"
+          })`;
           resultText = data.thread_content || "";
           if (resultMeta) resultMeta.textContent = "쓰레드 게시글";
         }

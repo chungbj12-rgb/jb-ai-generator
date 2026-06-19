@@ -4,6 +4,7 @@ import { useState } from "react";
 import ToneSelector from "@/components/ui/ToneSelector";
 import TopicSuggester from "@/components/blog/TopicSuggester";
 import { TEXT_PROVIDER_OPTIONS } from "@/lib/llm";
+import { THREAD_ACCOUNT_OPTIONS } from "@/lib/prompts/threadsPrompts";
 import { GenerateFormState, GenerateResponse, Platform } from "@/types";
 
 interface GenerateFormProps {
@@ -25,6 +26,7 @@ export default function GenerateForm({
     tone: "friendly",
     platform: "naver",
     textProvider: "gemini",
+    threadAccountType: "center",
   });
   const [error, setError] = useState<string | null>(null);
 
@@ -101,8 +103,8 @@ export default function GenerateForm({
           platform: "thread",
           keyword: threadKeyword,
           topic: threadKeyword,
-          tone: form.tone,
           textProvider: form.textProvider,
+          accountType: form.threadAccountType,
         }),
       });
       const data: GenerateResponse = await res.json();
@@ -297,7 +299,49 @@ export default function GenerateForm({
       {isThreadSelected && (
         <div>
           <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-700">
-            Step 3 · AI 선택
+            Step 3 · 계정 타입
+          </p>
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+            {THREAD_ACCOUNT_OPTIONS.map((option) => (
+              <label
+                key={option.value}
+                className={`flex cursor-pointer flex-col rounded-lg border px-3 py-3 transition-all ${
+                  form.threadAccountType === option.value
+                    ? "border-indigo-500 bg-indigo-50 ring-2 ring-indigo-200"
+                    : "border-gray-200 bg-white hover:border-gray-300"
+                }`}
+              >
+                <input
+                  type="radio"
+                  name="threadAccountType"
+                  value={option.value}
+                  checked={form.threadAccountType === option.value}
+                  onChange={() =>
+                    setForm((prev) => ({
+                      ...prev,
+                      threadAccountType: option.value,
+                    }))
+                  }
+                  className="sr-only"
+                />
+                <span className="text-sm font-semibold text-gray-900">
+                  {option.label}
+                </span>
+                <span className="mt-0.5 text-[11px] text-gray-500">
+                  {option.description}
+                </span>
+              </label>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {isThreadSelected && <div className="border-t border-gray-100" />}
+
+      {isThreadSelected && (
+        <div>
+          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-700">
+            Step 4 · AI 선택
           </p>
           <div className="grid grid-cols-2 gap-2">
             {TEXT_PROVIDER_OPTIONS.map((option) => (
@@ -343,10 +387,10 @@ export default function GenerateForm({
         </div>
       )}
 
-      {platform && <div className="border-t border-gray-100" />}
+      {platform && !isThreadSelected && <div className="border-t border-gray-100" />}
 
-      {/* ── STEP 4: 톤 선택 ── */}
-      {platform && (
+      {/* ── 톤 선택 (블로그만) ── */}
+      {isNaverSelected && (
         <div>
           <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-700">
             Step 4 · 톤 선택

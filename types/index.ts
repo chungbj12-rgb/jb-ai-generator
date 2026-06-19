@@ -1,6 +1,7 @@
 export type Tone = "friendly" | "professional" | "emotional";
 export type Platform = "naver" | "thread";
 export type TextProvider = "gemini" | "openai";
+export type ThreadAccountType = "personal" | "center";
 
 export interface BlogPost {
   id: string;
@@ -22,6 +23,8 @@ export interface GenerateRequest {
   platform: Platform;
   textProvider?: TextProvider;
   keyword?: string;
+  /** 쓰레드 전용: personal(정봉진) | center(JB스포츠) */
+  accountType?: ThreadAccountType;
 }
 
 export interface PipelineCostSummary {
@@ -72,6 +75,7 @@ export interface GenerateFormState {
   tone: Tone;
   platform: Platform;
   textProvider: TextProvider;
+  threadAccountType: ThreadAccountType;
 }
 
 export interface ToneOption {
