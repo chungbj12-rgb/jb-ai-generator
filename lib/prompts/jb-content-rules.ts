@@ -1,5 +1,7 @@
 /** JB스포츠 배구센터 — 제목 추천·본문 생성 공통 지침 */
 
+import { JB_CENTER_INFO, JB_INTRO_OPENING } from "@/lib/prompts/jb-sports-blog-guide";
+
 export const JB_BRAND_CONTEXT = `
 [브랜드·주제 범위 — 반드시 준수]
 - 업체: 제이비스포츠 배구센터 (JB스포츠), 용인시 수지구, 대표 정봉진
@@ -143,13 +145,13 @@ export function buildJbThreadFallbackTopics(keyword: string): string[] {
 /** 웹 본문 생성 시 필수 출력 체크리스트 */
 export const JB_NAVER_OUTPUT_CHECKLIST = `
 [본문 출력 체크리스트 — 하나라도 빠지면 실패]
-1. 첫 문장: "안녕하세요, 제이비스포츠 대표 정봉진입니다." 로 시작
+1. 첫 문장: "${JB_INTRO_OPENING}" 로 시작 (대표 인사·정봉진 소개 문구 금지)
 2. 9년차·누적 4,000명·코치 2명·차량 9대 중 2개 이상 언급
 3. 학부모 고민 공감 2~3문장 (체력, 인성, 자신감, 안전 등)
 4. 소제목 3~4개 ("첫 번째, …" / "두 번째, …" 형식)
 5. 배구 교육·JB스포츠 방식·기대효과가 각 섹션에 포함
 6. 지역 키워드(용인/수지/배구학원 등) 4~5회 자연 반복
-7. 전화번호 031-266-5779 포함
+7. 마지막 연락처: ${JB_CENTER_INFO.mobile} 포함
 8. 마무리: "긴 글 읽어주셔서 감사합니다."
 9. (사진: …) 이미지 삽입 위치 5곳 이상
 10. JSON·blocks 형식 금지 — 읽을 수 있는 블로그 본문 plain text만 출력

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import DashboardShell from "@/components/layout/DashboardShell";
 import GenerateForm from "@/components/blog/GenerateForm";
 import ResultCard from "@/components/blog/ResultCard";
+import ContentRevisionPanel from "@/components/blog/ContentRevisionPanel";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import { createClientSafe } from "@/lib/supabase/client";
 import { GenerateResponse } from "@/types";
@@ -12,6 +13,7 @@ export default function GeneratePage() {
   const [userEmail, setUserEmail] = useState<string>();
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<GenerateResponse | null>(null);
+  const [revisionCost, setRevisionCost] = useState(0);
 
   useEffect(() => {
     const supabase = createClientSafe();
@@ -21,6 +23,8 @@ export default function GeneratePage() {
       setUserEmail(user?.email ?? undefined);
     });
   }, []);
+
+  const revisionTopic = result?.title || result?.topic || "";
 
   return (
     <DashboardShell userEmail={userEmail}>
@@ -33,7 +37,10 @@ export default function GeneratePage() {
         </div>
 
         <GenerateForm
-          onResult={(data) => setResult(data)}
+          onResult={(data) => {
+            setResult(data);
+            setRevisionCost(0);
+          }}
           onLoading={setLoading}
         />
 
@@ -52,21 +59,73 @@ export default function GeneratePage() {
               <p className="mb-4 text-xs text-gray-500">
                 2단계 파이프라인 · {result.pipeline.char_count}자 · $
                 {result.pipeline.total_cost_usd.toFixed(4)} USD
+                {revisionCost > 0 && (
+                  <span>
+                    {" "}
+                    · 수정 ${revisionCost.toFixed(4)} USD
+                  </span>
+                )}
                 {result.pipeline.status === "needs_review" && (
                   <span className="ml-2 text-amber-600">(검토 필요)</span>
                 )}
               </p>
             )}
-            <div className="grid gap-4 lg:grid-cols-2">
+            <div className="space-y-6">
               {result.naver_content && (
-                <ResultCard
-                  platform="naver"
-                  content={result.naver_content}
-                  hashtags={result.naver_hashtags}
-                />
+                <div className="space-y-4">
+                  <ResultCard
+                    platform="naver"
+                    content={result.naver_content}
+                    hashtags={result.naver_hashtags}
+                  />
+                  <ContentRevisionPanel
+                    postId={result.id}
+                    platform="naver"
+                    topic={revisionTopic}
+                    keyword={result.keyword}
+                    content={result.naver_content}
+                    onRevised={(data) => {
+                      setResult((prev) =>
+                        prev
+                          ? {
+                              ...prev,
+                              naver_content: data.content,
+                              pipeline: prev.pipeline
+                                ? {
+                                    ...prev.pipeline,
+                                    char_count: data.char_count,
+                                  }
+                                : undefined,
+                            }
+                          : null,
+                      );
+                      setRevisionCost((c) => c + data.cost_usd);
+                    }}
+                  />
+                </div>
               )}
               {result.thread_content && (
-                <ResultCard platform="thread" content={result.thread_content} />
+                <div className="space-y-4">
+                  <ResultCard
+                    platform="thread"
+                    content={result.thread_content}
+                  />
+                  <ContentRevisionPanel
+                    postId={result.id}
+                    platform="thread"
+                    topic={revisionTopic}
+                    keyword={result.keyword}
+                    content={result.thread_content}
+                    onRevised={(data) => {
+                      setResult((prev) =>
+                        prev
+                          ? { ...prev, thread_content: data.content }
+                          : null,
+                      );
+                      setRevisionCost((c) => c + data.cost_usd);
+                    }}
+                  />
+                </div>
               )}
             </div>
           </div>

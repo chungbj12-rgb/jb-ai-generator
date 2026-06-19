@@ -42,10 +42,21 @@ export interface PipelineCostSummary {
 export interface GenerateResponse {
   id?: string;
   title?: string;
+  topic?: string;
+  keyword?: string;
   naver_content?: string;
   thread_content?: string;
   naver_hashtags?: string[];
   pipeline?: PipelineCostSummary;
+  error?: string;
+}
+
+export interface RevisePostResponse {
+  revised_content: string;
+  edits_summary: string;
+  char_count: number;
+  cost_usd: number;
+  platform: Platform;
   error?: string;
 }
 

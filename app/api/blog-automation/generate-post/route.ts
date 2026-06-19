@@ -68,6 +68,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       id: result.postId,
       title: result.title,
+      topic,
+      keyword,
       naver_content: result.final_body,
       naver_hashtags: naverHashtags,
       pipeline: {

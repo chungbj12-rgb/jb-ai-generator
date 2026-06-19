@@ -1,4 +1,4 @@
-import { JB_CENTER_INFO } from "@/lib/prompts/jb-sports-blog-guide";
+import { JB_CENTER_INFO, JB_INTRO_OPENING } from "@/lib/prompts/jb-sports-blog-guide";
 
 /** 8단계 SEO 사전 발행 체크리스트 */
 export const JB_SEO_CHECKLIST = `
@@ -8,7 +8,7 @@ export const JB_SEO_CHECKLIST = `
 4. 키워드 밀도: 메인·연관 키워드가 본문에 4~5회 자연 분산인가? (억지 반복 금지)
 5. 분량: 공백 포함 1,500~1,800자인가?
 6. 신뢰 요소: 9년·4,000명·2코치·9대 셔틀·원장 상주 중 2개 이상 포함인가?
-7. 연락처: ${JB_CENTER_INFO.phone} 포함인가?
+7. 연락처: 글 마지막에 ${JB_CENTER_INFO.mobile} 포함인가?
 8. CTA: 글 마지막에 체험/상담 유도 문구 + 버튼 카피가 있는가?
 `.trim();
 
@@ -23,7 +23,7 @@ export const JB_CTA_RULES = `
 - 본문 마지막 2~3문장: 부담 없는 체험·상담 유도 (과장 광고 금지)
 - CTA 문구 예: "우리 아이에게 맞는 배구 교육이 궁금하시다면 체험 수업으로 직접 확인해 보세요."
 - 버튼 카피 예: "무료 체험 신청하기" / "수지 배구학원 상담하기"
-- 연락처: ☎ ${JB_CENTER_INFO.phone} / ${JB_CENTER_INFO.mobile}
+- 연락처(글 마지막 필수): ☎ ${JB_CENTER_INFO.mobile}
 - 카카오채널·블로그 이웃 추가는 선택적으로 1문장
 `.trim();
 
@@ -73,7 +73,7 @@ ${JB_KEYWORD_STRATEGY}
 
 [최종 다듬기]
 5. 문체를 신뢰감 있고 다정한 학부모 대상 어투로 다듬는다. 과장된 마케팅 어투는 피한다.
-6. 글 도입부에 공감을 유도하는 후킹 문장을 배치한다. 첫 문장은 "안녕하세요, 제이비스포츠 대표 정봉진입니다." 로 시작.
+6. 글 도입부에 공감을 유도하는 후킹 문장을 배치한다. 첫 문장은 "${JB_INTRO_OPENING}" 로 시작 (대표 정봉진 인사 금지).
 7. 글 마지막에 아래 CTA 규칙에 따라 CTA 문구와 버튼 카피를 삽입한다.
 ${JB_CTA_RULES}
 

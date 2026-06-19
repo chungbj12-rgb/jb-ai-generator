@@ -11,6 +11,7 @@ import {
 import { BlogPost, Tone } from "@/types";
 import { formatDateShort, getDisplayName } from "@/lib/utils/display";
 import ResultCard from "@/components/blog/ResultCard";
+import ContentRevisionPanel from "@/components/blog/ContentRevisionPanel";
 
 interface HistoryListProps {
   posts: BlogPost[];
@@ -153,7 +154,7 @@ export default function HistoryList({ posts, authorEmail }: HistoryListProps) {
           onClick={() => setViewPost(null)}
         >
           <div
-            className="max-h-[85vh] w-full max-w-2xl overflow-y-auto rounded-2xl bg-white p-6 shadow-xl"
+            className="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-2xl bg-white p-6 shadow-xl"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="mb-4 flex items-start justify-between gap-4">
@@ -175,17 +176,49 @@ export default function HistoryList({ posts, authorEmail }: HistoryListProps) {
             </div>
             <div className="space-y-4">
               {viewPost.naver_content && (
-                <ResultCard
-                  platform="naver"
-                  content={viewPost.naver_content}
-                  hashtags={viewPost.naver_hashtags ?? undefined}
-                />
+                <>
+                  <ResultCard
+                    platform="naver"
+                    content={viewPost.naver_content}
+                    hashtags={viewPost.naver_hashtags ?? undefined}
+                  />
+                  <ContentRevisionPanel
+                    postId={viewPost.id}
+                    platform="naver"
+                    topic={viewPost.topic}
+                    keyword={viewPost.keyword ?? undefined}
+                    content={viewPost.naver_content}
+                    onRevised={(data) => {
+                      setViewPost((prev) =>
+                        prev
+                          ? { ...prev, naver_content: data.content }
+                          : null,
+                      );
+                    }}
+                  />
+                </>
               )}
               {viewPost.thread_content && (
-                <ResultCard
-                  platform="thread"
-                  content={viewPost.thread_content}
-                />
+                <>
+                  <ResultCard
+                    platform="thread"
+                    content={viewPost.thread_content}
+                  />
+                  <ContentRevisionPanel
+                    postId={viewPost.id}
+                    platform="thread"
+                    topic={viewPost.topic}
+                    keyword={viewPost.keyword ?? undefined}
+                    content={viewPost.thread_content}
+                    onRevised={(data) => {
+                      setViewPost((prev) =>
+                        prev
+                          ? { ...prev, thread_content: data.content }
+                          : null,
+                      );
+                    }}
+                  />
+                </>
               )}
             </div>
           </div>

@@ -121,6 +121,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       id: savedPost.id,
+      topic,
       naver_content: naverContent ?? undefined,
       thread_content: threadContent ?? undefined,
       naver_hashtags: naverHashtags ?? undefined,

@@ -9,14 +9,17 @@ export const JB_CENTER_INFO = {
   coachesPerClass: "수업당 코치 2명 동시 진행",
   shuttle: "차량 9대 (아파트 정문 픽업)",
   phone: "031-266-5779",
-  mobile: "010-6513-5779",
+  mobile: "010-3397-5866",
   tuition: "100,000~150,000원",
   trial: "초등 무료 / 그 외 40,000원 (카카오채널 팔로우 시 50% 할인)",
 } as const;
 
+/** 블로그 도입 첫 문장 (고정) */
+export const JB_INTRO_OPENING = "안녕하십니까 제이비스포츠 배구전문센터 입니다.";
+
 export const INTRO_OPENINGS = [
-  "안녕하세요, 제이비스포츠 대표 정봉진입니다.",
-  "안녕하세요, 수지 지역 배구교육 전문가 제이비입니다.",
+  JB_INTRO_OPENING,
+  "안녕하십니까, 제이비스포츠 배구전문센터입니다.",
 ] as const;
 
 export const HOOK_WORDS = [
@@ -91,7 +94,7 @@ export const JB_SPORTS_BLOG_STYLE_GUIDE = `
    - "배구는 단순한 스포츠가 아닙니다."
    - "우리 아이의 숨겨진 능력을 깨워주는 시간, 오늘 시작해보세요."
    - "지금 평일반/주말반 모집 중입니다. 문의주세요!"
-   - ☎ ${JB_CENTER_INFO.phone} · "긴 글 읽어주셔서 감사합니다."
+   - ☎ ${JB_CENTER_INFO.mobile} · "긴 글 읽어주셔서 감사합니다."
 8) image — 코치+아이들 단체·밝은 마무리 (CTA 블록은 시스템 추가)
 
 ## 설득 6공식 (모두 적용)
@@ -106,7 +109,7 @@ export const JB_SPORTS_BLOG_STYLE_GUIDE = `
 
 ## SEO
 - 본문 지역 키워드 4~5회 자연 반복 · 1,700~1,900자 (최소 1,500자)
-- ${JB_CENTER_INFO.phone} 필수 · CTA 자연스럽게
+- ${JB_CENTER_INFO.mobile} 필수 (글 마지막 연락처) · CTA 자연스럽게
 
 ## 절대 금지
 - AI 티 ("~할 수 있습니다" 반복) · 추상어("최고의 센터") · 직접 광고("지금 등록!")
