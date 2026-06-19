@@ -25,19 +25,30 @@ function buildUserPrompt(
   topic: string,
   lengthHint?: string,
 ): string {
+  const researchBlock = stage1.research_bundle
+    ? `[research_bundle — Gemini가 검색·수집한 연구·통계 (사실 유지 필수)]
+${JSON.stringify(stage1.research_bundle, null, 2)}
+
+`
+    : "";
+
   const base = `키워드: ${keyword}
 주제: ${topic}
 
-[Stage1 draft_body]
+${researchBlock}[Stage1 draft_body — 정보형 초안]
 ${stage1.draft_body}
 
 [key_facts_used]
 ${JSON.stringify(stage1.key_facts_used, null, 2)}
 
+[source_notes]
+${JSON.stringify(stage1.source_notes, null, 2)}
+
 [title_candidates]
 ${JSON.stringify(stage1.title_candidates, null, 2)}
 
-위 초안을 품질보정·최종 다듬기하여 JSON으로 반환하세요.`;
+위 자료조사 기반 초안을 JB스포츠가 직접 쓴 것처럼 정돈하여 최종 JSON으로 반환하세요.
+연구·통계 사실은 유지하고, 어투·구조·공감·SEO·CTA만 다듬으세요.`;
 
   if (!lengthHint) return base;
   return `${base}

@@ -289,7 +289,7 @@ export default function GenerateForm({
             Step 3 · 2단계 AI 파이프라인
           </p>
           <p className="mt-1 text-[11px] leading-relaxed text-emerald-700">
-            1단계 Gemini Flash-Lite (자료조사+초안) → 2단계 GPT-5.4 (SEO·브랜드 톤·CTA)
+            1단계 Gemini (검색·연구수집 → 사실 기반 초안) → 2단계 GPT-5.4 (직접 쓴 것처럼 정돈·브랜드 톤)
           </p>
         </div>
       )}
