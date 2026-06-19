@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  Bot,
   History,
   Settings,
   Sparkles,
@@ -12,7 +11,6 @@ import {
 
 const MENU = [
   { href: "/generate", label: "글 생성", icon: Sparkles },
-  { href: "/automate", label: "블로그 자동화", icon: Bot },
   { href: "/history", label: "히스토리", icon: History },
   { href: "/history", label: "팀원 글 보기", icon: Users },
 ];

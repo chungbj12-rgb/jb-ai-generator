@@ -9,13 +9,13 @@ export const MAX_OUTPUT_TOKENS = 2048;
 /** 블로그 본문 — 한글 1500~1800자 + 여유 */
 export const BLOG_MAX_OUTPUT_TOKENS = 8192;
 
+const RETRYABLE_STATUS = new Set([429, 500, 502, 503, 504]);
+
 export interface GenerateTextOptions {
   maxOutputTokens?: number;
-  /**
-   * 0 = thinking 비활성 (2.5 Flash).
-   * thinking 토큰이 maxOutputTokens에 포함되면 본문이 잘리므로 블로그 생성은 0 고정.
-   */
+  /** 0 = thinking 비활성 (2.5 Flash) */
   thinkingBudget?: number;
+  retries?: number;
 }
 
 /** GEMINI_API_KEY 설정 여부 */
@@ -29,7 +29,36 @@ function getClient(): GoogleGenAI | null {
   return new GoogleGenAI({ apiKey });
 }
 
-/** 단일 프롬프트로 텍스트 생성 */
+function isRetryableError(error: unknown): boolean {
+  if (!error || typeof error !== "object") return false;
+  const err = error as { status?: number; message?: string };
+  if (err.status && RETRYABLE_STATUS.has(err.status)) return true;
+  const msg = String(err.message ?? "");
+  return /429|503|overloaded|quota|rate limit|RESOURCE_EXHAUSTED/i.test(msg);
+}
+
+function toUserFriendlyError(error: unknown): string {
+  const msg = error instanceof Error ? error.message : String(error);
+  if (/429|quota|RESOURCE_EXHAUSTED|rate limit/i.test(msg)) {
+    return "Gemini API 사용 한도를 초과했습니다. 잠시 후 다시 시도하거나 API 키·요금제를 확인해 주세요.";
+  }
+  if (/503|overloaded|UNAVAILABLE/i.test(msg)) {
+    return "Gemini 서버가 일시적으로 바쁩니다. 잠시 후 다시 시도해 주세요.";
+  }
+  if (/API key|API_KEY|401|403|PERMISSION_DENIED/i.test(msg)) {
+    return "Gemini API 키가 올바르지 않습니다. Vercel 환경변수 GEMINI_API_KEY를 확인해 주세요.";
+  }
+  if (/GEMINI_API_KEY가 설정되지 않/i.test(msg)) {
+    return "GEMINI_API_KEY가 설정되지 않았습니다.";
+  }
+  return msg || "Gemini API 호출 중 오류가 발생했습니다.";
+}
+
+function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+/** 단일 프롬프트로 텍스트 생성 (일시 오류 시 재시도) */
 export async function generateText(
   prompt: string,
   options?: GenerateTextOptions,
@@ -41,28 +70,44 @@ export async function generateText(
 
   const maxOutputTokens = options?.maxOutputTokens ?? MAX_OUTPUT_TOKENS;
   const thinkingBudget = options?.thinkingBudget ?? 0;
+  const retries = options?.retries ?? 2;
+  let lastError: unknown;
 
-  const response = await ai.models.generateContent({
-    model: GEMINI_MODEL,
-    contents: prompt,
-    config: {
-      maxOutputTokens,
-      thinkingConfig: { thinkingBudget },
-    },
-  });
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      const response = await ai.models.generateContent({
+        model: GEMINI_MODEL,
+        contents: prompt,
+        config: {
+          maxOutputTokens,
+          thinkingConfig: { thinkingBudget },
+        },
+      });
 
-  const text = response.text?.trim();
-  if (!text) {
-    throw new Error("Gemini가 빈 응답을 반환했습니다.");
+      const text = response.text?.trim();
+      if (!text) {
+        throw new Error("Gemini가 빈 응답을 반환했습니다.");
+      }
+
+      return text;
+    } catch (error) {
+      lastError = error;
+      if (attempt < retries && isRetryableError(error)) {
+        await sleep(1000 * (attempt + 1));
+        continue;
+      }
+      break;
+    }
   }
 
-  return text;
+  throw new Error(toUserFriendlyError(lastError));
 }
 
-/** 네이버/쓰레드 블로그 본문 생성용 (thinking off, 충분한 출력 한도) */
+/** 네이버/쓰레드 블로그 본문 생성용 */
 export function generateBlogText(prompt: string): Promise<string> {
   return generateText(prompt, {
     maxOutputTokens: BLOG_MAX_OUTPUT_TOKENS,
     thinkingBudget: 0,
+    retries: 2,
   });
 }

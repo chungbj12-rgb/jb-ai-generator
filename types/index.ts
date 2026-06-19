@@ -1,5 +1,6 @@
 export type Tone = "friendly" | "professional" | "emotional";
 export type Platform = "naver" | "thread";
+export type TextProvider = "gemini" | "openai";
 
 export interface BlogPost {
   id: string;
@@ -9,6 +10,8 @@ export interface BlogPost {
   naver_content: string | null;
   thread_content: string | null;
   naver_hashtags?: string[] | null;
+  keyword?: string | null;
+  pipeline_status?: string | null;
   created_at: string;
   user_email?: string;
 }
@@ -17,25 +20,47 @@ export interface GenerateRequest {
   topic: string;
   tone: Tone;
   platform: Platform;
+  textProvider?: TextProvider;
+  keyword?: string;
+}
+
+export interface PipelineCostSummary {
+  status: string;
+  char_count: number;
+  total_cost_usd: number;
+  stage_costs?: Array<{
+    stage: number;
+    provider: string;
+    model: string;
+    inputTokens: number;
+    outputTokens: number;
+    costUsd: number;
+  }>;
+  edits_made?: string[];
 }
 
 export interface GenerateResponse {
   id?: string;
+  title?: string;
   naver_content?: string;
   thread_content?: string;
   naver_hashtags?: string[];
+  pipeline?: PipelineCostSummary;
   error?: string;
 }
 
 export interface SuggestTopicsRequest {
   keyword: string;
   platform?: Platform;
+  textProvider?: TextProvider;
 }
 
 export interface GenerateFormState {
   topic: string;
+  keyword: string;
   tone: Tone;
   platform: Platform;
+  textProvider: TextProvider;
 }
 
 export interface ToneOption {
@@ -54,12 +79,3 @@ export interface PromptGuideline {
   updated_at: string;
   updated_by: string | null;
 }
-
-export type {
-  AgentJob,
-  AgentJobStatus,
-  AgentPayload,
-  BlogBlock,
-  PrepareAgentRequest,
-  PrepareAgentResponse,
-} from "@/types/agent";

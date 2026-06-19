@@ -28,7 +28,7 @@ export default function GeneratePage() {
         <div className="mb-8">
           <h1 className="text-xl font-bold text-gray-900">새 글 생성</h1>
           <p className="mt-1 text-sm text-gray-500">
-            주제를 입력하고 원하는 플랫폼과 톤을 선택하세요
+            배구·배구학원 키워드로 제목을 추천받고 JB스포츠 지침에 맞는 글을 생성하세요
           </p>
         </div>
 
@@ -48,6 +48,15 @@ export default function GeneratePage() {
             <h2 className="mb-4 text-base font-bold text-gray-900">
               생성 결과
             </h2>
+            {result.pipeline && (
+              <p className="mb-4 text-xs text-gray-500">
+                2단계 파이프라인 · {result.pipeline.char_count}자 · $
+                {result.pipeline.total_cost_usd.toFixed(4)} USD
+                {result.pipeline.status === "needs_review" && (
+                  <span className="ml-2 text-amber-600">(검토 필요)</span>
+                )}
+              </p>
+            )}
             <div className="grid gap-4 lg:grid-cols-2">
               {result.naver_content && (
                 <ResultCard

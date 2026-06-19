@@ -1,7 +1,7 @@
 /** 지침·프롬프트에서 본문 분량(자) 추출 */
 
-export const DEFAULT_NAVER_MIN_CHARS = 1500;
-export const DEFAULT_NAVER_MAX_CHARS = 1800;
+export const DEFAULT_NAVER_MIN_CHARS = 1700;
+export const DEFAULT_NAVER_MAX_CHARS = 1900;
 
 export interface NaverLengthBounds {
   min: number;

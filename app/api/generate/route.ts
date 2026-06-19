@@ -1,16 +1,25 @@
-// Gemini API 호출 → 글 생성 → Supabase 저장 API 엔드포인트
+// AI 텍스트 생성 → 글 생성 → Supabase 저장
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { generateBlogText, isGeminiConfigured } from "@/lib/gemini";
+import {
+  generateBlogText,
+  isProviderConfigured,
+  type TextProvider,
+} from "@/lib/llm";
 import { generateNaverBlogContent } from "@/lib/naver-content";
 import { generateNaverHashtags } from "@/lib/naver-hashtags";
+import { JB_SPORTS_NAVER_GUIDELINE_DB } from "@/lib/prompts/jb-sports-blog-guide";
 import { buildThreadPrompt } from "@/lib/prompts";
 import { GenerateRequest } from "@/types";
+
+export const maxDuration = 300;
 
 export async function POST(request: NextRequest) {
   try {
     const body: GenerateRequest = await request.json();
     const { topic, tone, platform } = body;
+    const textProvider: TextProvider =
+      body.textProvider === "openai" ? "openai" : "gemini";
 
     if (!topic || !tone || !platform) {
       return NextResponse.json(
@@ -39,14 +48,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!isGeminiConfigured()) {
+    if (!isProviderConfigured(textProvider)) {
+      const keyName =
+        textProvider === "openai" ? "OPENAI_API_KEY" : "GEMINI_API_KEY";
       return NextResponse.json(
-        { error: "GEMINI_API_KEY가 설정되지 않았습니다." },
+        { error: `${keyName}가 설정되지 않았습니다.` },
         { status: 503 },
       );
     }
 
-    // DB에서 플랫폼별 최신 지침 조회 (실패 시 빈 문자열 폴백)
     const { data: naverGuideline } = await supabase
       .from("prompt_guidelines")
       .select("content")
@@ -59,7 +69,8 @@ export async function POST(request: NextRequest) {
       .eq("platform", "thread")
       .single();
 
-    const naverGuidelineText = naverGuideline?.content ?? "";
+    const naverGuidelineText =
+      naverGuideline?.content?.trim() || JB_SPORTS_NAVER_GUIDELINE_DB;
     const threadGuidelineText = threadGuideline?.content ?? "";
 
     let naverContent: string | null = null;
@@ -71,13 +82,19 @@ export async function POST(request: NextRequest) {
         topic,
         tone,
         naverGuidelineText,
+        textProvider,
       );
-      naverHashtags = await generateNaverHashtags(topic, naverContent);
+      naverHashtags = await generateNaverHashtags(
+        topic,
+        naverContent,
+        textProvider,
+      );
     }
 
     if (platform === "thread") {
       threadContent = await generateBlogText(
         buildThreadPrompt(topic, tone, threadGuidelineText),
+        textProvider,
       );
     }
 
@@ -107,14 +124,12 @@ export async function POST(request: NextRequest) {
       naver_content: naverContent ?? undefined,
       thread_content: threadContent ?? undefined,
       naver_hashtags: naverHashtags ?? undefined,
+      textProvider,
     });
   } catch (error) {
     console.error("글 생성 오류:", error);
     const message =
       error instanceof Error ? error.message : "글 생성 중 오류가 발생했습니다.";
-    return NextResponse.json(
-      { error: message.includes("GEMINI") ? message : "글 생성 중 오류가 발생했습니다." },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

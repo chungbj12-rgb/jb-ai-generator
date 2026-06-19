@@ -7,11 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "agent": "tsx agent/run.ts",
-    "agent:login": "tsx agent/run.ts --login",
-    "agent:config": "tsx scripts/sync-agent-config.ts",
-    "agent:prepare": "tsx scripts/sync-agent-config.ts && tsx agent/run.ts --config agent.config.local.json --prepare-only",
-    "postinstall": "playwright install chromium"
+    "test:all": "npm run build",
+    "pipeline:test": "tsx scripts/test-blog-pipeline.ts"
   },
   "dependencies": {
     "@google/genai": "^1.52.0",
@@ -21,7 +18,6 @@
     "clsx": "^2.1.1",
     "lucide-react": "^1.16.0",
     "next": "^15.3.3",
-    "playwright": "^1.52.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-hook-form": "^7.76.0",

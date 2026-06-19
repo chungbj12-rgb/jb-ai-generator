@@ -1,4 +1,5 @@
-import { generateBlogText } from "@/lib/gemini";
+import { generateBlogText } from "@/lib/llm";
+import type { TextProvider } from "@/lib/llm";
 import {
   getNaverLengthBounds,
   isNaverContentTooShort,
@@ -11,10 +12,12 @@ export async function generateNaverBlogContent(
   topic: string,
   tone: Tone,
   guideline: string,
+  textProvider: TextProvider = "gemini",
 ): Promise<string> {
   const bounds = getNaverLengthBounds(guideline);
   let content = await generateBlogText(
     buildNaverPrompt(topic, tone, guideline),
+    textProvider,
   );
 
   if (!isNaverContentTooShort(content, bounds)) {
@@ -27,6 +30,7 @@ export async function generateNaverBlogContent(
 
   content = await generateBlogText(
     buildNaverExpandPrompt(topic, tone, guideline, content),
+    textProvider,
   );
 
   if (isNaverContentTooShort(content, bounds)) {

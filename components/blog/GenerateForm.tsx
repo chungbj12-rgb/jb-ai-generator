@@ -4,6 +4,7 @@
 import { useState } from "react";
 import ToneSelector from "@/components/ui/ToneSelector";
 import TopicSuggester from "@/components/blog/TopicSuggester";
+import { TEXT_PROVIDER_OPTIONS } from "@/lib/llm";
 import { GenerateFormState, GenerateResponse } from "@/types";
 
 interface GenerateFormProps {
@@ -21,8 +22,10 @@ export default function GenerateForm({
   const [inputMode, setInputMode] = useState<InputMode>("suggest");
   const [form, setForm] = useState<GenerateFormState>({
     topic: "",
+    keyword: "",
     tone: "friendly",
     platform: "naver",
+    textProvider: "gemini",
   });
   const [error, setError] = useState<string | null>(null);
 
@@ -53,12 +56,28 @@ export default function GenerateForm({
       return;
     }
 
+    if (isNaverSelected && !form.keyword.trim() && inputMode === "suggest") {
+      setError("키워드를 입력하고 제목을 추천받아 주세요.");
+      return;
+    }
+
     onLoading(true);
     try {
-      const res = await fetch("/api/generate", {
+      const endpoint = isNaverSelected
+        ? "/api/blog-automation/generate-post"
+        : "/api/generate";
+      const body = isNaverSelected
+        ? {
+            keyword: form.keyword.trim() || form.topic.trim(),
+            topic: form.topic.trim(),
+            tone: form.tone,
+          }
+        : form;
+
+      const res = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify(body),
       });
       const data: GenerateResponse = await res.json();
       if (!res.ok) {
@@ -112,13 +131,28 @@ export default function GenerateForm({
         {inputMode === "suggest" && (
           <TopicSuggester
             platform={form.platform}
+            textProvider={form.textProvider}
             onSelectTopic={handleSelectTopic}
+            onKeywordChange={(keyword) =>
+              setForm((prev) => ({ ...prev, keyword }))
+            }
           />
         )}
 
         {/* 직접 입력 모드: textarea */}
         {inputMode === "manual" && (
-          <div>
+          <div className="space-y-2">
+            {isNaverSelected && (
+              <input
+                type="text"
+                value={form.keyword}
+                onChange={(e) =>
+                  setForm((prev) => ({ ...prev, keyword: e.target.value }))
+                }
+                placeholder="SEO 키워드 (예: 수지배구학원)"
+                className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-indigo-300"
+              />
+            )}
             <textarea
               value={form.topic}
               onChange={(e) =>
@@ -211,10 +245,63 @@ export default function GenerateForm({
 
       <div className="border-t border-gray-100" />
 
-      {/* ── STEP 3: 톤 선택 ── */}
+      {/* ── STEP 3: AI 선택 (쓰레드만) ── */}
+      {isThreadSelected && (
+        <div>
+          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-700">
+            Step 3 · AI 선택
+          </p>
+          <div className="grid grid-cols-2 gap-2">
+            {TEXT_PROVIDER_OPTIONS.map((option) => (
+              <label
+                key={option.id}
+                className={`flex cursor-pointer flex-col rounded-lg border px-3 py-3 transition-all ${
+                  form.textProvider === option.id
+                    ? "border-indigo-500 bg-indigo-50 ring-2 ring-indigo-200"
+                    : "border-gray-200 bg-white hover:border-gray-300"
+                }`}
+              >
+                <input
+                  type="radio"
+                  name="textProvider"
+                  value={option.id}
+                  checked={form.textProvider === option.id}
+                  onChange={() =>
+                    setForm((prev) => ({ ...prev, textProvider: option.id }))
+                  }
+                  className="sr-only"
+                />
+                <span className="text-sm font-semibold text-gray-900">
+                  {option.label}
+                </span>
+                <span className="mt-0.5 text-[11px] text-gray-500">
+                  {option.description}
+                </span>
+              </label>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {isNaverSelected && (
+        <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-3">
+          <p className="text-xs font-semibold text-emerald-800">
+            Step 3 · 2단계 AI 파이프라인
+          </p>
+          <p className="mt-1 text-[11px] leading-relaxed text-emerald-700">
+            1단계 Gemini Flash-Lite (자료조사+초안) → 2단계 GPT-5.4 (SEO·브랜드 톤·CTA)
+          </p>
+        </div>
+      )}
+
+      {(isThreadSelected || isNaverSelected) && (
+        <div className="border-t border-gray-100" />
+      )}
+
+      {/* ── STEP 4: 톤 선택 ── */}
       <div>
         <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-700">
-          Step 3 · 톤 선택
+          Step 4 · 톤 선택
         </p>
         <ToneSelector
           value={form.tone}

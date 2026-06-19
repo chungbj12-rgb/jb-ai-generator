@@ -3,8 +3,7 @@ node_modules
 .env*.local
 .DS_Store
 .vercel
+dist/
 agent-output/
 .naver-session/
 agent.config.local.json
-playwright-report/
-test-results/

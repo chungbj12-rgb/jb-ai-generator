@@ -2,17 +2,21 @@
 
 import { useEffect, useState } from "react";
 import { Loader2, Sparkles } from "lucide-react";
-import { Platform } from "@/types";
+import { Platform, TextProvider } from "@/types";
 
 interface TopicSuggesterProps {
   platform: Platform;
+  textProvider: TextProvider;
   onSelectTopic: (topic: string) => void;
+  onKeywordChange?: (keyword: string) => void;
 }
 
 /** 키워드 기반 AI 제목/주제 추천 */
 export default function TopicSuggester({
   platform,
+  textProvider,
   onSelectTopic,
+  onKeywordChange,
 }: TopicSuggesterProps) {
   const [keyword, setKeyword] = useState("");
   const [topics, setTopics] = useState<string[]>([]);
@@ -25,7 +29,7 @@ export default function TopicSuggester({
   useEffect(() => {
     setTopics([]);
     setError(null);
-  }, [platform]);
+  }, [platform, textProvider]);
 
   async function handleSuggest() {
     const trimmed = keyword.trim();
@@ -42,7 +46,7 @@ export default function TopicSuggester({
       const res = await fetch("/api/suggest-topics", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ keyword: trimmed, platform }),
+        body: JSON.stringify({ keyword: trimmed, platform, textProvider }),
       });
 
       const data = await res.json();
@@ -53,6 +57,9 @@ export default function TopicSuggester({
       }
 
       setTopics(data.topics ?? []);
+      if (data.warning) {
+        setError(data.warning);
+      }
       if (!data.topics?.length) {
         setError(
           isNaver
@@ -71,21 +78,24 @@ export default function TopicSuggester({
     <div className="space-y-3">
       <p className="text-[11px] text-gray-500">
         {isNaver
-          ? "네이버 상위노출에 유리한 제목 10개를 추천합니다."
-          : "쓰레드용 주제 5개를 추천합니다."}
+          ? "배구·배구학원 키워드로 JB스포츠 맞춤 제목 10개를 추천합니다."
+          : "배구·학부모 관점 쓰레드 주제 5개를 추천합니다."}
       </p>
       <div className="flex gap-2">
         <input
           type="text"
           value={keyword}
-          onChange={(e) => setKeyword(e.target.value)}
+          onChange={(e) => {
+            setKeyword(e.target.value);
+            onKeywordChange?.(e.target.value);
+          }}
           onKeyDown={(e) => {
             if (e.key === "Enter") {
               e.preventDefault();
               handleSuggest();
             }
           }}
-          placeholder="키워드 입력 (예: 제주 여행, 카페, 다이어트)"
+          placeholder="키워드 입력 (예: 용인배구학원, 수지배구레슨, 초등배구)"
           className="flex-1 rounded-lg border border-gray-200 px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/15"
         />
         <button
@@ -104,7 +114,13 @@ export default function TopicSuggester({
       </div>
 
       {error && (
-        <p className="rounded-lg bg-red-50 px-3 py-2 text-xs text-red-500">
+        <p
+          className={`rounded-lg px-3 py-2 text-xs ${
+            topics.length > 0
+              ? "bg-amber-50 text-amber-700"
+              : "bg-red-50 text-red-500"
+          }`}
+        >
           {error}
         </p>
       )}
