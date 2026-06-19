@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "next lint",
     "test:all": "npm run build",
-    "pipeline:test": "tsx scripts/test-blog-pipeline.ts"
+    "pipeline:test": "tsx scripts/test-blog-pipeline.ts",
+    "package:zip": "powershell -NoProfile -ExecutionPolicy Bypass -File packaging/scripts/build-package.ps1"
   },
   "dependencies": {
     "@google/genai": "^1.52.0",

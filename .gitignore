@@ -4,6 +4,7 @@ node_modules
 .DS_Store
 .vercel
 dist/
+packaging/dist/
 agent-output/
 .naver-session/
 agent.config.local.json

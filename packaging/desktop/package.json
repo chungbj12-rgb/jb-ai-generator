@@ -1,0 +1,46 @@
+{
+  "name": "jbai-desktop",
+  "version": "1.0.0",
+  "description": "JB스포츠 AI 블로그 생성기 데스크톱 앱",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "pack": "electron-builder --win portable"
+  },
+  "build": {
+    "appId": "com.jbsports.jbai",
+    "productName": "JB스포츠 블로그생성기",
+    "directories": {
+      "output": "dist"
+    },
+    "win": {
+      "target": ["portable"],
+      "icon": "../assets/icon.ico"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "../standalone-client/**",
+      "../lib/**",
+      "../assets/**"
+    ],
+    "extraResources": [
+      {
+        "from": "../standalone-client",
+        "to": "standalone-client"
+      },
+      {
+        "from": "../lib",
+        "to": "lib"
+      },
+      {
+        "from": "../assets",
+        "to": "assets"
+      }
+    ]
+  },
+  "devDependencies": {
+    "electron": "^33.2.0",
+    "electron-builder": "^25.1.8"
+  }
+}

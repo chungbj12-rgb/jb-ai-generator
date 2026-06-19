@@ -1,7 +1,7 @@
-// 2단계 블로그 파이프라인 API — POST { keyword, topic, tone? }
+// 2단계 블로그 파이프라인 API — POST { keyword, topic, tone?, customCta? }
 import { NextRequest, NextResponse } from "next/server";
 import { generateBlogPost } from "@/blog-automation/lib/pipeline";
-import { createClient } from "@/lib/supabase/server";
+import { getApiAuth } from "@/lib/supabase/api-auth";
 import { generateNaverHashtags } from "@/lib/naver-hashtags";
 import { isGeminiConfigured } from "@/lib/gemini";
 import { isOpenAIConfigured } from "@/lib/llm";
@@ -9,12 +9,17 @@ import { resolveNaverGuideline } from "@/lib/prompts/resolve-naver-guideline";
 
 export const maxDuration = 300;
 
+export async function OPTIONS() {
+  return new NextResponse(null, { status: 204 });
+}
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const keyword = String(body.keyword ?? "").trim();
     const topic = String(body.topic ?? "").trim();
     const tone = body.tone ?? "friendly";
+    const customCta = String(body.customCta ?? body.cta ?? "").trim();
 
     if (!keyword || !topic) {
       return NextResponse.json(
@@ -33,11 +38,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const supabase = await createClient();
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
+    const { user, supabase, authError } = await getApiAuth(request);
 
     if (authError || !user) {
       return NextResponse.json({ error: "로그인이 필요합니다." }, { status: 401 });
@@ -50,6 +51,7 @@ export async function POST(request: NextRequest) {
       userId: user.id,
       tone,
       naverGuideline,
+      customCta: customCta || undefined,
     });
 
     let naverHashtags: string[] | undefined;

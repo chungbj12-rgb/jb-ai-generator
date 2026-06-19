@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>JB스포츠 AI 콘텐츠 생성기</title>
+    <link rel="icon" href="../assets/icon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="../lib/jbai-app.css" />
+  </head>
+  <body>
+    <div class="layout">
+      <aside class="brand-panel">
+        <div class="brand-icon">
+          <img src="../assets/icon.svg" alt="" />
+        </div>
+        <h1>AI 콘텐츠 생성기</h1>
+        <p>
+          네이버 블로그 · 쓰레드<br />
+          JB스포츠 톤으로 자동 생성
+        </p>
+        <div class="feature-list">
+          <div class="feature-item">✦ 블로그: 주제 추천 후 생성</div>
+          <div class="feature-item">✦ 쓰레드: 키워드만으로 생성</div>
+          <div class="feature-item">✦ 맞춤 CTA 문구 반영</div>
+        </div>
+      </aside>
+
+      <main class="main-panel">
+        <div class="card">
+          <h2>콘텐츠 생성</h2>
+          <p class="subtitle">플랫폼 선택 → 입력 → 생성</p>
+
+          <div id="app-status" class="status"></div>
+
+          <section id="login-section">
+            <form id="login-form">
+              <div class="field">
+                <label for="login-email">이메일 (계정)</label>
+                <input
+                  id="login-email"
+                  type="email"
+                  placeholder="name@example.com"
+                  autocomplete="username"
+                  required
+                />
+              </div>
+              <div class="field">
+                <label for="login-password">비밀번호</label>
+                <input
+                  id="login-password"
+                  type="password"
+                  placeholder="비밀번호"
+                  autocomplete="current-password"
+                  required
+                />
+              </div>
+              <button id="login-btn" type="submit" class="btn btn-primary">
+                로그인
+              </button>
+            </form>
+          </section>
+
+          <section id="generate-section" class="hidden">
+            <div class="session-bar">
+              <span><strong id="session-email"></strong> 님</span>
+              <button type="button" id="logout-btn">로그아웃</button>
+            </div>
+
+            <form id="generate-form">
+              <div class="step-block">
+                <p class="step-label">Step 1 · 플랫폼 선택</p>
+                <div class="platform-grid">
+                  <button
+                    type="button"
+                    class="platform-btn"
+                    data-platform="naver"
+                    id="platform-naver"
+                  >
+                    📝 네이버 블로그
+                  </button>
+                  <button
+                    type="button"
+                    class="platform-btn"
+                    data-platform="thread"
+                    id="platform-thread"
+                  >
+                    💬 쓰레드
+                  </button>
+                </div>
+              </div>
+
+              <div id="blog-step" class="step-block hidden-step">
+                <p class="step-label">Step 2 · 주제 찾기</p>
+                <div class="mode-toggle">
+                  <button type="button" id="mode-suggest" class="active">
+                    ✨ AI 추천
+                  </button>
+                  <button type="button" id="mode-manual">✏️ 직접 입력</button>
+                </div>
+                <div id="blog-suggest-panel">
+                  <div class="inline-actions">
+                    <input
+                      id="blog-keyword"
+                      type="text"
+                      placeholder="키워드 (예: 수지배구학원)"
+                    />
+                    <button
+                      type="button"
+                      id="suggest-btn"
+                      class="btn btn-secondary"
+                    >
+                      제목 추천
+                    </button>
+                  </div>
+                  <div id="topic-list" class="topic-list"></div>
+                  <div id="selected-topic" class="selected-topic hidden"></div>
+                </div>
+                <div id="blog-manual-panel" class="hidden">
+                  <div class="field">
+                    <input
+                      id="blog-keyword-manual"
+                      type="text"
+                      placeholder="SEO 키워드"
+                    />
+                  </div>
+                  <div class="field">
+                    <textarea
+                      id="blog-topic-manual"
+                      rows="2"
+                      placeholder="블로그 제목·주제"
+                    ></textarea>
+                  </div>
+                </div>
+                <div class="pipeline-note" style="margin-top: 0.75rem">
+                  1단계 Gemini 연구·초안 → 2단계 GPT 정돈·브랜드 톤
+                </div>
+              </div>
+
+              <div id="thread-step" class="step-block hidden-step">
+                <p class="step-label">Step 2 · 키워드 입력</p>
+                <p class="subtitle" style="margin-bottom: 0.5rem">
+                  키워드만 입력하면 관련 쓰레드 글을 작성합니다.
+                </p>
+                <input
+                  id="thread-keyword"
+                  type="text"
+                  placeholder="예: 용인배구학원, 초등배구"
+                />
+              </div>
+
+              <div id="common-step" class="step-block hidden-step">
+                <div class="field">
+                  <label for="input-tone">톤</label>
+                  <select id="input-tone">
+                    <option value="friendly">친근한</option>
+                    <option value="professional">전문적인</option>
+                    <option value="emotional">감성적인</option>
+                  </select>
+                </div>
+                <div id="cta-field" class="field">
+                  <label for="input-cta">CTA (블로그, 선택)</label>
+                  <textarea
+                    id="input-cta"
+                    placeholder="예: JB스포츠 배구전문센터 상담 010-3397-5866"
+                  ></textarea>
+                </div>
+              </div>
+
+              <button
+                id="generate-btn"
+                type="submit"
+                class="btn btn-primary"
+                disabled
+              >
+                글 생성하기
+              </button>
+            </form>
+
+            <div id="result-box" class="result-box">
+              <h3 id="result-title"></h3>
+              <div id="result-meta" class="result-meta"></div>
+              <div id="result-content" class="result-content"></div>
+              <div class="result-actions">
+                <button type="button" id="copy-btn" class="btn btn-ghost">
+                  본문 복사
+                </button>
+                <button type="button" id="open-web-btn" class="btn btn-ghost">
+                  웹에서 히스토리 보기
+                </button>
+              </div>
+            </div>
+          </section>
+        </div>
+      </main>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <script src="../lib/jbai-app.js"></script>
+    <script>
+      JbaiApp.bindApp();
+    </script>
+  </body>
+</html>

@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>JB 콘텐츠 생성</title>
+    <link rel="stylesheet" href="lib/jbai-app.css" />
+  </head>
+  <body>
+    <div class="layout">
+      <main class="main-panel">
+        <div class="card">
+          <h2>콘텐츠 생성</h2>
+          <div id="app-status" class="status"></div>
+
+          <section id="login-section">
+            <form id="login-form">
+              <div class="field">
+                <label for="login-email">이메일</label>
+                <input id="login-email" type="email" required />
+              </div>
+              <div class="field">
+                <label for="login-password">비밀번호</label>
+                <input id="login-password" type="password" required />
+              </div>
+              <button id="login-btn" type="submit" class="btn btn-primary">
+                로그인
+              </button>
+            </form>
+          </section>
+
+          <section id="generate-section" class="hidden">
+            <div class="session-bar">
+              <span><strong id="session-email"></strong></span>
+              <button type="button" id="logout-btn">로그아웃</button>
+            </div>
+            <form id="generate-form">
+              <div class="step-block">
+                <p class="step-label">Step 1 · 플랫폼</p>
+                <div class="platform-grid">
+                  <button type="button" class="platform-btn" id="platform-naver">
+                    📝 블로그
+                  </button>
+                  <button type="button" class="platform-btn" id="platform-thread">
+                    💬 쓰레드
+                  </button>
+                </div>
+              </div>
+
+              <div id="blog-step" class="step-block hidden-step">
+                <p class="step-label">Step 2 · 주제 찾기</p>
+                <div class="mode-toggle">
+                  <button type="button" id="mode-suggest" class="active">
+                    AI 추천
+                  </button>
+                  <button type="button" id="mode-manual">직접 입력</button>
+                </div>
+                <div id="blog-suggest-panel">
+                  <div class="inline-actions">
+                    <input id="blog-keyword" type="text" placeholder="키워드" />
+                    <button type="button" id="suggest-btn" class="btn btn-secondary">
+                      추천
+                    </button>
+                  </div>
+                  <div id="topic-list" class="topic-list"></div>
+                  <div id="selected-topic" class="selected-topic hidden"></div>
+                </div>
+                <div id="blog-manual-panel" class="hidden">
+                  <input id="blog-keyword-manual" type="text" placeholder="키워드" />
+                  <textarea id="blog-topic-manual" rows="2" placeholder="주제"></textarea>
+                </div>
+              </div>
+
+              <div id="thread-step" class="step-block hidden-step">
+                <p class="step-label">Step 2 · 키워드</p>
+                <input id="thread-keyword" type="text" placeholder="키워드만 입력" />
+              </div>
+
+              <div id="common-step" class="step-block hidden-step">
+                <select id="input-tone">
+                  <option value="friendly">친근한</option>
+                  <option value="professional">전문적인</option>
+                  <option value="emotional">감성적인</option>
+                </select>
+                <div id="cta-field" class="field">
+                  <textarea id="input-cta" rows="2" placeholder="CTA (블로그)"></textarea>
+                </div>
+              </div>
+
+              <button id="generate-btn" type="submit" class="btn btn-primary" disabled>
+                생성
+              </button>
+            </form>
+
+            <div id="result-box" class="result-box">
+              <h3 id="result-title"></h3>
+              <div id="result-meta" class="result-meta"></div>
+              <div id="result-content" class="result-content"></div>
+              <button type="button" id="copy-btn" class="btn btn-ghost">복사</button>
+            </div>
+          </section>
+        </div>
+      </main>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <script src="lib/jbai-app.js"></script>
+    <script>
+      JbaiApp.bindApp({ popup: true });
+    </script>
+  </body>
+</html>

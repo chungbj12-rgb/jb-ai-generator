@@ -105,15 +105,18 @@ export function buildThreadPrompt(
   topic: string,
   tone: Tone,
   guideline: string,
+  options?: { fromKeyword?: boolean },
 ): string {
+  const fromKeyword = options?.fromKeyword ?? false;
+  const subjectBlock = fromKeyword
+    ? `[키워드]\n${topic}\n\n위 키워드와 관련된 배구·아이 운동 맥락의 쓰레드 게시글을 작성하세요.`
+    : `[주제]\n${topic}\n\n아래 주제로 배구·아이 운동 맥락의 쓰레드 게시글을 작성하세요.`;
+
   return `${JB_BRAND_CONTEXT}
 
 당신은 JB스포츠 배구센터 쓰레드 콘텐츠 담당자입니다.
-아래 주제로 배구·아이 운동 맥락의 쓰레드 게시글을 작성하세요.
+${subjectBlock}
 배구와 무관한 내용 금지.
-
-[주제]
-${topic}
 
 [작성 톤]
 ${TONE_DESCRIPTION[tone]}

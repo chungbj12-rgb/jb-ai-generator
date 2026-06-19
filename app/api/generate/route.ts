@@ -1,6 +1,6 @@
 // AI 텍스트 생성 → 글 생성 → Supabase 저장
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { getApiAuth } from "@/lib/supabase/api-auth";
 import {
   generateBlogText,
   isProviderConfigured,
@@ -14,16 +14,32 @@ import { GenerateRequest } from "@/types";
 
 export const maxDuration = 300;
 
+export async function OPTIONS() {
+  return new NextResponse(null, { status: 204 });
+}
+
 export async function POST(request: NextRequest) {
   try {
     const body: GenerateRequest = await request.json();
-    const { topic, tone, platform } = body;
+    const { tone, platform } = body;
     const textProvider: TextProvider =
       body.textProvider === "openai" ? "openai" : "gemini";
+    const keyword = String(body.keyword ?? "").trim();
+    const topicInput = String(body.topic ?? "").trim();
+
+    const topic =
+      platform === "thread"
+        ? topicInput || keyword
+        : topicInput;
 
     if (!topic || !tone || !platform) {
       return NextResponse.json(
-        { error: "주제, 톤, 플랫폼은 필수 입력 항목입니다." },
+        {
+          error:
+            platform === "thread"
+              ? "키워드, 톤, 플랫폼은 필수 입력 항목입니다."
+              : "주제, 톤, 플랫폼은 필수 입력 항목입니다.",
+        },
         { status: 400 },
       );
     }
@@ -35,11 +51,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const supabase = await createClient();
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
+    const { user, supabase, authError } = await getApiAuth(request);
 
     if (authError || !user) {
       return NextResponse.json(
@@ -70,6 +82,7 @@ export async function POST(request: NextRequest) {
     let naverContent: string | null = null;
     let threadContent: string | null = null;
     let naverHashtags: string[] | null = null;
+    const threadSubject = keyword || topic;
 
     if (platform === "naver") {
       naverContent = await generateNaverBlogContent(
@@ -87,7 +100,9 @@ export async function POST(request: NextRequest) {
 
     if (platform === "thread") {
       threadContent = await generateBlogText(
-        buildThreadPrompt(topic, tone, threadGuidelineText),
+        buildThreadPrompt(threadSubject, tone, threadGuidelineText, {
+          fromKeyword: Boolean(keyword),
+        }),
         textProvider,
       );
     }
@@ -96,8 +111,9 @@ export async function POST(request: NextRequest) {
       .from("blog_posts")
       .insert({
         user_id: user.id,
-        topic,
+        topic: platform === "thread" ? threadSubject : topic,
         tone,
+        keyword: keyword || null,
         naver_content: naverContent,
         thread_content: threadContent,
         naver_hashtags: naverHashtags,

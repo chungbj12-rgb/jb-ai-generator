@@ -24,6 +24,7 @@ function buildUserPrompt(
   keyword: string,
   topic: string,
   lengthHint?: string,
+  customCta?: string,
 ): string {
   const researchBlock = stage1.research_bundle
     ? `[research_bundle — Gemini가 검색·수집한 연구·통계 (사실 유지 필수)]
@@ -48,7 +49,14 @@ ${JSON.stringify(stage1.source_notes, null, 2)}
 ${JSON.stringify(stage1.title_candidates, null, 2)}
 
 위 자료조사 기반 초안을 JB스포츠가 직접 쓴 것처럼 정돈하여 최종 JSON으로 반환하세요.
-연구·통계 사실은 유지하고, 어투·구조·공감·SEO·CTA만 다듬으세요.`;
+연구·통계 사실은 유지하고, 어투·구조·공감·SEO·CTA만 다듬으세요.${
+    customCta
+      ? `
+
+[사용자 지정 CTA — 본문 마무리에 반드시 반영]
+${customCta}`
+      : ""
+  }`;
 
   if (!lengthHint) return base;
   return `${base}
@@ -108,10 +116,11 @@ export async function runStage2Finalize(
   topic: string,
   mergedGuideline: string,
   lengthHint?: string,
+  customCta?: string,
 ): Promise<Stage2Result> {
   const model = PIPELINE_CONFIG.openaiFinalModel;
   const systemPrompt = buildStage2SystemPrompt(mergedGuideline);
-  const userPrompt = buildUserPrompt(stage1, keyword, topic, lengthHint);
+  const userPrompt = buildUserPrompt(stage1, keyword, topic, lengthHint, customCta);
 
   const execute = async (): Promise<Stage2Result> => {
     const { text, inputTokens, outputTokens } = await callOpenAI(

@@ -85,6 +85,8 @@ export interface GenerateBlogPostOptions {
   tone?: string;
   /** 지침관리(naver) DB content */
   naverGuideline?: string;
+  /** 패키징 클라이언트에서 지정하는 맞춤 CTA 문구 */
+  customCta?: string;
 }
 
 /**
@@ -95,7 +97,7 @@ export async function generateBlogPost(
   topic: string,
   options: GenerateBlogPostOptions = {},
 ): Promise<PipelineResult> {
-  const { supabase, postId: existingPostId, userId, tone = "friendly", naverGuideline = "" } =
+  const { supabase, postId: existingPostId, userId, tone = "friendly", naverGuideline = "", customCta } =
     options;
   const stage_costs: StageCostLog[] = [];
   let postId = existingPostId;
@@ -135,7 +137,7 @@ export async function generateBlogPost(
     if (logCtx) await logStage(logCtx, stage1Cost);
 
     // Stage 2 (글자수 미달 시 1회 재호출)
-    let stage2 = await runStage2Finalize(stage1.output, keyword, topic, mergedGuideline);
+    let stage2 = await runStage2Finalize(stage1.output, keyword, topic, mergedGuideline, undefined, customCta);
     let stage2Cost: StageCostLog = {
       stage: 2,
       provider: stage2.provider,
@@ -154,6 +156,7 @@ export async function generateBlogPost(
         topic,
         mergedGuideline,
         lengthAdjustHint(stage2.output.final_body),
+        customCta,
       );
       const retryCost: StageCostLog = {
         stage: 2,

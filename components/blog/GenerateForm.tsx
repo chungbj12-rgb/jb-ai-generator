@@ -1,24 +1,23 @@
 "use client";
 
-// 주제 추천 + 직접 입력 + 플랫폼/톤 선택 통합 폼 컴포넌트
 import { useState } from "react";
 import ToneSelector from "@/components/ui/ToneSelector";
 import TopicSuggester from "@/components/blog/TopicSuggester";
 import { TEXT_PROVIDER_OPTIONS } from "@/lib/llm";
-import { GenerateFormState, GenerateResponse } from "@/types";
+import { GenerateFormState, GenerateResponse, Platform } from "@/types";
 
 interface GenerateFormProps {
   onResult: (result: GenerateResponse) => void;
   onLoading: (loading: boolean) => void;
 }
 
-// 입력 모드: 키워드로 추천받기 vs 직접 입력
 type InputMode = "suggest" | "manual";
 
 export default function GenerateForm({
   onResult,
   onLoading,
 }: GenerateFormProps) {
+  const [platform, setPlatform] = useState<Platform | null>(null);
   const [inputMode, setInputMode] = useState<InputMode>("suggest");
   const [form, setForm] = useState<GenerateFormState>({
     topic: "",
@@ -29,55 +28,82 @@ export default function GenerateForm({
   });
   const [error, setError] = useState<string | null>(null);
 
-  // TopicSuggester에서 주제 선택 시 topic에 자동 반영
+  const isNaverSelected = platform === "naver";
+  const isThreadSelected = platform === "thread";
+
+  const handlePlatformSelect = (selected: Platform) => {
+    setPlatform(selected);
+    setForm((prev) => ({
+      ...prev,
+      platform: selected,
+      topic: "",
+      keyword: "",
+    }));
+    setInputMode("suggest");
+    setError(null);
+  };
+
   const handleSelectTopic = (topic: string) => {
     setForm((prev) => ({ ...prev, topic }));
   };
 
-  // 플랫폼 단일 선택 (둘 중 하나만)
-  const handlePlatformSelect = (selected: "naver" | "thread") => {
-    setForm((prev) => ({
-      ...prev,
-      platform: selected,
-      topic: inputMode === "suggest" ? "" : prev.topic,
-    }));
-  };
-
-  const isNaverSelected = form.platform === "naver";
-  const isThreadSelected = form.platform === "thread";
-
-  // 글 생성 API 호출
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
 
-    if (!form.topic.trim()) {
-      setError("주제를 선택하거나 직접 입력해주세요.");
+    if (!platform) {
+      setError("먼저 네이버 블로그 또는 쓰레드를 선택해 주세요.");
       return;
     }
 
-    if (isNaverSelected && !form.keyword.trim() && inputMode === "suggest") {
-      setError("키워드를 입력하고 제목을 추천받아 주세요.");
+    if (isNaverSelected) {
+      if (!form.topic.trim()) {
+        setError("주제를 추천받아 선택하거나 직접 입력해 주세요.");
+        return;
+      }
+      if (inputMode === "suggest" && !form.keyword.trim()) {
+        setError("키워드를 입력하고 제목을 추천받아 주세요.");
+        return;
+      }
+    }
+
+    if (isThreadSelected && !form.keyword.trim()) {
+      setError("키워드를 입력해 주세요.");
       return;
     }
 
     onLoading(true);
     try {
-      const endpoint = isNaverSelected
-        ? "/api/blog-automation/generate-post"
-        : "/api/generate";
-      const body = isNaverSelected
-        ? {
+      if (isNaverSelected) {
+        const res = await fetch("/api/blog-automation/generate-post", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
             keyword: form.keyword.trim() || form.topic.trim(),
             topic: form.topic.trim(),
             tone: form.tone,
-          }
-        : form;
+          }),
+        });
+        const data: GenerateResponse = await res.json();
+        if (!res.ok) {
+          setError(data.error || "글 생성에 실패했습니다.");
+          return;
+        }
+        onResult(data);
+        return;
+      }
 
-      const res = await fetch(endpoint, {
+      const threadKeyword = form.keyword.trim();
+      const res = await fetch("/api/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
+        body: JSON.stringify({
+          platform: "thread",
+          keyword: threadKeyword,
+          topic: threadKeyword,
+          tone: form.tone,
+          textProvider: form.textProvider,
+        }),
       });
       const data: GenerateResponse = await res.json();
       if (!res.ok) {
@@ -94,106 +120,10 @@ export default function GenerateForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
-      {/* ── STEP 1: 주제 설정 ── */}
-      <div>
-        <div className="mb-2 flex items-center justify-between">
-          <p className="text-xs font-semibold uppercase tracking-wide text-gray-700">
-            Step 1 · 주제 설정
-          </p>
-          {/* 입력 모드 전환 토글 */}
-          <div className="flex rounded-md bg-gray-100 p-0.5">
-            <button
-              type="button"
-              onClick={() => setInputMode("suggest")}
-              className={`rounded px-2.5 py-1 text-[11px] font-medium transition-all ${
-                inputMode === "suggest"
-                  ? "bg-white text-indigo-700 shadow-sm"
-                  : "text-gray-400 hover:text-gray-600"
-              }`}
-            >
-              ✨ AI 추천
-            </button>
-            <button
-              type="button"
-              onClick={() => setInputMode("manual")}
-              className={`rounded px-2.5 py-1 text-[11px] font-medium transition-all ${
-                inputMode === "manual"
-                  ? "bg-white text-indigo-700 shadow-sm"
-                  : "text-gray-400 hover:text-gray-600"
-              }`}
-            >
-              ✏️ 직접 입력
-            </button>
-          </div>
-        </div>
-
-        {/* AI 추천 모드: TopicSuggester */}
-        {inputMode === "suggest" && (
-          <TopicSuggester
-            platform={form.platform}
-            textProvider={form.textProvider}
-            onSelectTopic={handleSelectTopic}
-            onKeywordChange={(keyword) =>
-              setForm((prev) => ({ ...prev, keyword }))
-            }
-          />
-        )}
-
-        {/* 직접 입력 모드: textarea */}
-        {inputMode === "manual" && (
-          <div className="space-y-2">
-            {isNaverSelected && (
-              <input
-                type="text"
-                value={form.keyword}
-                onChange={(e) =>
-                  setForm((prev) => ({ ...prev, keyword: e.target.value }))
-                }
-                placeholder="SEO 키워드 (예: 수지배구학원)"
-                className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-indigo-300"
-              />
-            )}
-            <textarea
-              value={form.topic}
-              onChange={(e) =>
-                setForm((prev) => ({ ...prev, topic: e.target.value }))
-              }
-              placeholder="예: 2025년 봄 제주도 여행 꿀팁 — 숨은 명소와 맛집 모음"
-              rows={3}
-              className="w-full resize-none rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-indigo-300"
-            />
-          </div>
-        )}
-
-        {/* 선택된 주제 미리보기 (AI 추천 모드에서만 표시) */}
-        {inputMode === "suggest" && form.topic && (
-          <div className="mt-2 flex items-start gap-2 rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-2.5">
-            <span className="flex-shrink-0 text-sm text-indigo-500">✓</span>
-            <div className="min-w-0 flex-1">
-              <p className="mb-0.5 text-[10px] font-medium text-indigo-500">
-                {isNaverSelected ? "선택된 제목" : "선택된 주제"}
-              </p>
-              <p className="text-sm leading-snug text-indigo-800">
-                {form.topic}
-              </p>
-            </div>
-            <button
-              type="button"
-              onClick={() => setForm((prev) => ({ ...prev, topic: "" }))}
-              className="flex-shrink-0 text-lg leading-none text-indigo-300 hover:text-indigo-500"
-            >
-              ×
-            </button>
-          </div>
-        )}
-      </div>
-
-      <div className="border-t border-gray-100" />
-
-      {/* ── STEP 2: 플랫폼 선택 (radio — 하나만 선택) ── */}
+      {/* ── STEP 1: 플랫폼 선택 (가장 먼저) ── */}
       <div>
         <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-700">
-          Step 2 · 플랫폼 선택
+          Step 1 · 플랫폼 선택
         </p>
         <div
           role="radiogroup"
@@ -204,7 +134,7 @@ export default function GenerateForm({
             className={`flex cursor-pointer items-center justify-center gap-2 rounded-lg border py-3 text-sm font-medium transition-all ${
               isNaverSelected
                 ? "border-indigo-500 bg-indigo-50 text-indigo-700 ring-2 ring-indigo-200"
-                : "border-gray-200 bg-white text-gray-400 hover:border-gray-300"
+                : "border-gray-200 bg-white text-gray-600 hover:border-gray-300"
             }`}
           >
             <input
@@ -224,7 +154,7 @@ export default function GenerateForm({
             className={`flex cursor-pointer items-center justify-center gap-2 rounded-lg border py-3 text-sm font-medium transition-all ${
               isThreadSelected
                 ? "border-indigo-500 bg-indigo-50 text-indigo-700 ring-2 ring-indigo-200"
-                : "border-gray-200 bg-white text-gray-400 hover:border-gray-300"
+                : "border-gray-200 bg-white text-gray-600 hover:border-gray-300"
             }`}
           >
             <input
@@ -241,11 +171,129 @@ export default function GenerateForm({
             )}
           </label>
         </div>
+        {!platform && (
+          <p className="mt-2 text-xs text-gray-500">
+            작성할 플랫폼을 먼저 선택하면 다음 단계가 표시됩니다.
+          </p>
+        )}
       </div>
 
-      <div className="border-t border-gray-100" />
+      {platform && <div className="border-t border-gray-100" />}
 
-      {/* ── STEP 3: AI 선택 (쓰레드만) ── */}
+      {/* ── STEP 2: 네이버 — 주제 찾기·선택 ── */}
+      {isNaverSelected && (
+        <div>
+          <div className="mb-2 flex items-center justify-between">
+            <p className="text-xs font-semibold uppercase tracking-wide text-gray-700">
+              Step 2 · 주제 찾기
+            </p>
+            <div className="flex rounded-md bg-gray-100 p-0.5">
+              <button
+                type="button"
+                onClick={() => setInputMode("suggest")}
+                className={`rounded px-2.5 py-1 text-[11px] font-medium transition-all ${
+                  inputMode === "suggest"
+                    ? "bg-white text-indigo-700 shadow-sm"
+                    : "text-gray-400 hover:text-gray-600"
+                }`}
+              >
+                ✨ AI 추천
+              </button>
+              <button
+                type="button"
+                onClick={() => setInputMode("manual")}
+                className={`rounded px-2.5 py-1 text-[11px] font-medium transition-all ${
+                  inputMode === "manual"
+                    ? "bg-white text-indigo-700 shadow-sm"
+                    : "text-gray-400 hover:text-gray-600"
+                }`}
+              >
+                ✏️ 직접 입력
+              </button>
+            </div>
+          </div>
+
+          {inputMode === "suggest" && (
+            <TopicSuggester
+              platform="naver"
+              textProvider={form.textProvider}
+              onSelectTopic={handleSelectTopic}
+              onKeywordChange={(keyword) =>
+                setForm((prev) => ({ ...prev, keyword }))
+              }
+            />
+          )}
+
+          {inputMode === "manual" && (
+            <div className="space-y-2">
+              <input
+                type="text"
+                value={form.keyword}
+                onChange={(e) =>
+                  setForm((prev) => ({ ...prev, keyword: e.target.value }))
+                }
+                placeholder="SEO 키워드 (예: 수지배구학원)"
+                className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-indigo-300"
+              />
+              <textarea
+                value={form.topic}
+                onChange={(e) =>
+                  setForm((prev) => ({ ...prev, topic: e.target.value }))
+                }
+                placeholder="블로그 제목·주제 (예: 겨울방학 배구 캠프 선택 가이드)"
+                rows={3}
+                className="w-full resize-none rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-indigo-300"
+              />
+            </div>
+          )}
+
+          {inputMode === "suggest" && form.topic && (
+            <div className="mt-2 flex items-start gap-2 rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-2.5">
+              <span className="flex-shrink-0 text-sm text-indigo-500">✓</span>
+              <div className="min-w-0 flex-1">
+                <p className="mb-0.5 text-[10px] font-medium text-indigo-500">
+                  선택된 제목
+                </p>
+                <p className="text-sm leading-snug text-indigo-800">
+                  {form.topic}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setForm((prev) => ({ ...prev, topic: "" }))}
+                className="flex-shrink-0 text-lg leading-none text-indigo-300 hover:text-indigo-500"
+              >
+                ×
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── STEP 2: 쓰레드 — 키워드만 ── */}
+      {isThreadSelected && (
+        <div>
+          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-700">
+            Step 2 · 키워드 입력
+          </p>
+          <p className="mb-2 text-[11px] text-gray-500">
+            키워드만 입력하면 관련 쓰레드 글을 자동으로 작성합니다.
+          </p>
+          <input
+            type="text"
+            value={form.keyword}
+            onChange={(e) =>
+              setForm((prev) => ({ ...prev, keyword: e.target.value }))
+            }
+            placeholder="키워드 입력 (예: 용인배구학원, 초등배구, 수지배구레슨)"
+            className="w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/15"
+          />
+        </div>
+      )}
+
+      {platform && <div className="border-t border-gray-100" />}
+
+      {/* ── STEP 3: 쓰레드 AI 선택 / 블로그 파이프라인 안내 ── */}
       {isThreadSelected && (
         <div>
           <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-700">
@@ -289,25 +337,26 @@ export default function GenerateForm({
             Step 3 · 2단계 AI 파이프라인
           </p>
           <p className="mt-1 text-[11px] leading-relaxed text-emerald-700">
-            1단계 Gemini (검색·연구수집 → 사실 기반 초안) → 2단계 GPT-5.4 (직접 쓴 것처럼 정돈·브랜드 톤)
+            1단계 Gemini (검색·연구수집 → 사실 기반 초안) → 2단계 GPT-5.4
+            (직접 쓴 것처럼 정돈·브랜드 톤)
           </p>
         </div>
       )}
 
-      {(isThreadSelected || isNaverSelected) && (
-        <div className="border-t border-gray-100" />
-      )}
+      {platform && <div className="border-t border-gray-100" />}
 
       {/* ── STEP 4: 톤 선택 ── */}
-      <div>
-        <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-700">
-          Step 4 · 톤 선택
-        </p>
-        <ToneSelector
-          value={form.tone}
-          onChange={(tone) => setForm((prev) => ({ ...prev, tone }))}
-        />
-      </div>
+      {platform && (
+        <div>
+          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-700">
+            Step 4 · 톤 선택
+          </p>
+          <ToneSelector
+            value={form.tone}
+            onChange={(tone) => setForm((prev) => ({ ...prev, tone }))}
+          />
+        </div>
+      )}
 
       {error && (
         <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-500">
@@ -317,6 +366,7 @@ export default function GenerateForm({
 
       <button
         type="submit"
+        disabled={!platform}
         className="flex w-full items-center justify-center gap-2 rounded-lg bg-indigo-600 py-3 text-sm font-medium text-white transition-all hover:bg-indigo-700 active:scale-[0.98] disabled:opacity-60"
       >
         ✨ 글 생성하기
