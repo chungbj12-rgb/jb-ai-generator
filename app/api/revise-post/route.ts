@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { reviseContent } from "@/lib/revise-content";
 import { isOpenAIConfigured } from "@/lib/llm";
 import { createClient } from "@/lib/supabase/server";
+import { resolveNaverGuideline } from "@/lib/prompts/resolve-naver-guideline";
 import type { Platform } from "@/types";
 
 export const maxDuration = 120;
@@ -64,12 +65,16 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    const naverGuideline =
+      platform === "naver" ? await resolveNaverGuideline(supabase) : "";
+
     const result = await reviseContent({
       platform,
       topic,
       keyword,
       currentContent,
       feedback,
+      naverGuideline,
     });
 
     if (postId) {

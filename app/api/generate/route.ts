@@ -8,7 +8,7 @@ import {
 } from "@/lib/llm";
 import { generateNaverBlogContent } from "@/lib/naver-content";
 import { generateNaverHashtags } from "@/lib/naver-hashtags";
-import { JB_SPORTS_NAVER_GUIDELINE_DB } from "@/lib/prompts/jb-sports-blog-guide";
+import { resolveNaverGuideline } from "@/lib/prompts/resolve-naver-guideline";
 import { buildThreadPrompt } from "@/lib/prompts";
 import { GenerateRequest } from "@/types";
 
@@ -57,11 +57,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { data: naverGuideline } = await supabase
-      .from("prompt_guidelines")
-      .select("content")
-      .eq("platform", "naver")
-      .single();
+    const naverGuidelineText = await resolveNaverGuideline(supabase);
 
     const { data: threadGuideline } = await supabase
       .from("prompt_guidelines")
@@ -69,8 +65,6 @@ export async function POST(request: NextRequest) {
       .eq("platform", "thread")
       .single();
 
-    const naverGuidelineText =
-      naverGuideline?.content?.trim() || JB_SPORTS_NAVER_GUIDELINE_DB;
     const threadGuidelineText = threadGuideline?.content ?? "";
 
     let naverContent: string | null = null;

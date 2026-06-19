@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { generateNaverHashtags } from "@/lib/naver-hashtags";
 import { isGeminiConfigured } from "@/lib/gemini";
 import { isOpenAIConfigured } from "@/lib/llm";
+import { resolveNaverGuideline } from "@/lib/prompts/resolve-naver-guideline";
 
 export const maxDuration = 300;
 
@@ -42,10 +43,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "로그인이 필요합니다." }, { status: 401 });
     }
 
+    const naverGuideline = await resolveNaverGuideline(supabase);
+
     const result = await generateBlogPost(keyword, topic, {
       supabase,
       userId: user.id,
       tone,
+      naverGuideline,
     });
 
     let naverHashtags: string[] | undefined;

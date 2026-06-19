@@ -3,7 +3,8 @@ import { JB_CTA_RULES, JB_KEYWORD_STRATEGY, JB_SEO_CHECKLIST } from "@/blog-auto
 import { isBodyLengthValid, lengthAdjustHint } from "@/blog-automation/lib/stage2-finalize";
 import { withRetry } from "@/blog-automation/lib/retry";
 import { parseJsonObject } from "@/blog-automation/lib/parse-json";
-import { JB_CENTER_INFO, JB_SPORTS_BLOG_STYLE_GUIDE } from "@/lib/prompts/jb-sports-blog-guide";
+import { buildMergedPipelineGuideline, JB_PARENT_EMPATHY_QUESTIONS } from "@/blog-automation/lib/merged-guideline";
+import { JB_CENTER_INFO, JB_INTRO_OPENING } from "@/lib/prompts/jb-sports-blog-guide";
 import type { Platform } from "@/types";
 
 export interface ReviseContentInput {
@@ -13,6 +14,7 @@ export interface ReviseContentInput {
   currentContent: string;
   feedback: string;
   lengthHint?: string;
+  naverGuideline?: string;
 }
 
 export interface ReviseContentResult {
@@ -24,12 +26,18 @@ export interface ReviseContentResult {
   costUsd: number;
 }
 
-function buildRevisionSystemPrompt(platform: Platform): string {
+function buildRevisionSystemPrompt(
+  platform: Platform,
+  naverGuideline = "",
+): string {
   const platformLabel = platform === "naver" ? "네이버 블로그" : "쓰레드";
   const lengthRule =
     platform === "naver"
       ? `공백 포함 ${PIPELINE_CONFIG.minChars}~${PIPELINE_CONFIG.maxChars}자를 유지한다.`
       : "쓰레드 형식에 맞는 간결한 분량을 유지한다.";
+
+  const mergedGuideline =
+    platform === "naver" ? buildMergedPipelineGuideline(naverGuideline) : "";
 
   return `
 역할: 당신은 JB스포츠 배구센터의 ${platformLabel} 콘텐츠 에디터입니다.
@@ -37,9 +45,8 @@ function buildRevisionSystemPrompt(platform: Platform): string {
 요청 내용을 정확히 반영해 글을 다시 다듬습니다.
 
 센터 핵심 가치: 배구 실력보다 아이의 자존감·자신감·회복탄력성.
-원장 정봉진이 9년째 현장 상주, 학부모 신뢰가 최우선 자산.
 
-${JB_SPORTS_BLOG_STYLE_GUIDE}
+${platform === "naver" ? `[전체 지침 — 지침관리 블로그 프롬프트 포함]\n${mergedGuideline}\n\n${JB_PARENT_EMPATHY_QUESTIONS}` : ""}
 
 [SEO 체크리스트 — 네이버인 경우 유지]
 ${platform === "naver" ? JB_SEO_CHECKLIST : "(쓰레드는 SEO 체크리스트 생략)"}
@@ -51,12 +58,13 @@ ${JB_KEYWORD_STRATEGY}
 ${platform === "naver" ? JB_CTA_RULES : "(쓰레드는 짧은 마무리)"}
 
 수정 규칙:
-1. 사용자 피드백(수정 요청)을 최우선으로 반영한다. 예: "3가지 이유"를 센터 장점 3가지로 교체.
-2. 사용자가 제공한 구체 정보(시스템·장점·수치)는 그대로 녹인다. 없는 사실은 만들지 않는다.
-3. 수정 요청과 무관한 잘 쓰인 부분은 최대한 유지한다.
-4. 문체는 신뢰감 있고 다정한 학부모 대상 어투. 과장 광고 금지.
-5. ${lengthRule}
-6. 연락처: 글 마지막에 ☎ ${JB_CENTER_INFO.mobile} 안내
+1. 사용자 피드백(수정 요청)을 최우선으로 반영한다.
+2. 네이버 글은 첫 문장 "${JB_INTRO_OPENING}" + 학부모 공감 질문 2~3개를 유지·복원한다.
+3. 사용자가 제공한 구체 정보는 그대로 녹인다. 없는 사실은 만들지 않는다.
+4. 수정 요청과 무관한 잘 쓰인 부분은 최대한 유지한다.
+5. 문체는 신뢰감 있고 다정한 학부모 대상 어투. 과장 광고 금지.
+6. ${lengthRule}
+7. 연락처: 글 마지막에 ☎ ${JB_CENTER_INFO.mobile} 안내
 
 출력은 반드시 아래 JSON만:
 {
@@ -136,7 +144,10 @@ async function callOpenAIRevision(
 export async function reviseContent(
   input: ReviseContentInput,
 ): Promise<ReviseContentResult> {
-  const systemPrompt = buildRevisionSystemPrompt(input.platform);
+  const systemPrompt = buildRevisionSystemPrompt(
+    input.platform,
+    input.naverGuideline,
+  );
 
   const runOnce = async (lengthHint?: string) => {
     const userPrompt = buildRevisionUserPrompt({ ...input, lengthHint });

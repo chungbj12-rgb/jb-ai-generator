@@ -95,10 +95,11 @@ export async function runStage2Finalize(
   stage1: Stage1Output,
   keyword: string,
   topic: string,
+  mergedGuideline: string,
   lengthHint?: string,
 ): Promise<Stage2Result> {
   const model = PIPELINE_CONFIG.openaiFinalModel;
-  const systemPrompt = buildStage2SystemPrompt();
+  const systemPrompt = buildStage2SystemPrompt(mergedGuideline);
   const userPrompt = buildUserPrompt(stage1, keyword, topic, lengthHint);
 
   const execute = async (): Promise<Stage2Result> => {

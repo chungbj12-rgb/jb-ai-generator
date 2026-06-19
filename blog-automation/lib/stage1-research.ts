@@ -1,7 +1,7 @@
 import { GoogleGenAI } from "@google/genai";
 import { PIPELINE_CONFIG } from "@/blog-automation/lib/config";
 import { parseJsonObject } from "@/blog-automation/lib/parse-json";
-import { STAGE1_SYSTEM_PROMPT } from "@/blog-automation/lib/prompt-constants";
+import { buildStage1SystemPrompt } from "@/blog-automation/lib/prompt-constants";
 import { withRetry } from "@/blog-automation/lib/retry";
 
 export interface Stage1Output {
@@ -72,16 +72,18 @@ function normalizeStage1Output(raw: Stage1Output): Stage1Output {
 export async function runStage1Research(
   keyword: string,
   topic: string,
+  mergedGuideline: string,
 ): Promise<Stage1Result> {
   const model = PIPELINE_CONFIG.geminiDraftModel;
   const ai = getClient();
+  const systemInstruction = buildStage1SystemPrompt(mergedGuideline);
 
   const execute = async (): Promise<Stage1Result> => {
     const response = await ai.models.generateContent({
       model,
       contents: buildUserPrompt(keyword, topic),
       config: {
-        systemInstruction: STAGE1_SYSTEM_PROMPT,
+        systemInstruction,
         maxOutputTokens: 8192,
         thinkingConfig: { thinkingBudget: 0 },
         responseMimeType: "application/json",
