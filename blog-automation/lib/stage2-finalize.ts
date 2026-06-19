@@ -107,11 +107,19 @@ export async function runStage2Finalize(
       userPrompt,
     );
     const output = parseJsonObject<Stage2Output>(text);
-    if (!output.final_body?.trim()) {
+    const normalized: Stage2Output = {
+      title: String(output.title ?? topic).trim(),
+      final_body: String(output.final_body ?? "").trim(),
+      seo_checklist_result: output.seo_checklist_result ?? {},
+      edits_made: Array.isArray(output.edits_made)
+        ? output.edits_made.map(String)
+        : [],
+    };
+    if (!normalized.final_body) {
       throw new Error("Stage 2: final_body가 비어 있습니다.");
     }
     return {
-      output,
+      output: normalized,
       inputTokens,
       outputTokens,
       model,

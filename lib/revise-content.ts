@@ -2,6 +2,7 @@ import { PIPELINE_CONFIG, calcCostUsd } from "@/blog-automation/lib/config";
 import { JB_CTA_RULES, JB_KEYWORD_STRATEGY, JB_SEO_CHECKLIST } from "@/blog-automation/lib/prompt-constants";
 import { isBodyLengthValid, lengthAdjustHint } from "@/blog-automation/lib/stage2-finalize";
 import { withRetry } from "@/blog-automation/lib/retry";
+import { parseJsonObject } from "@/blog-automation/lib/parse-json";
 import { JB_CENTER_INFO, JB_SPORTS_BLOG_STYLE_GUIDE } from "@/lib/prompts/jb-sports-blog-guide";
 import type { Platform } from "@/types";
 
@@ -131,27 +132,6 @@ async function callOpenAIRevision(
   };
 }
 
-function parseRevisionJson(text: string): {
-  revised_content: string;
-  edits_summary: string;
-} {
-  const cleaned = text
-    .trim()
-    .replace(/^```(?:json)?\s*/i, "")
-    .replace(/\s*```$/i, "")
-    .trim();
-  const parsed = JSON.parse(cleaned) as {
-    revised_content?: string;
-    edits_summary?: string;
-  };
-  if (!parsed.revised_content?.trim()) {
-    throw new Error("수정된 본문이 비어 있습니다.");
-  }
-  return {
-    revised_content: parsed.revised_content.trim(),
-    edits_summary: parsed.edits_summary?.trim() || "요청하신 내용을 반영해 수정했습니다.",
-  };
-}
 
 export async function reviseContent(
   input: ReviseContentInput,
@@ -164,8 +144,20 @@ export async function reviseContent(
       systemPrompt,
       userPrompt,
     );
-    const parsed = parseRevisionJson(text);
-    return { ...parsed, inputTokens, outputTokens };
+    const parsed = parseJsonObject<{
+      revised_content?: string;
+      edits_summary?: string;
+    }>(text);
+    if (!parsed.revised_content?.trim()) {
+      throw new Error("수정된 본문이 비어 있습니다.");
+    }
+    return {
+      revised_content: parsed.revised_content.trim(),
+      edits_summary:
+        parsed.edits_summary?.trim() || "요청하신 내용을 반영해 수정했습니다.",
+      inputTokens,
+      outputTokens,
+    };
   };
 
   const first = await withRetry(() => runOnce(), 1);

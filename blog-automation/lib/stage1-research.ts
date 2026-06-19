@@ -19,6 +19,27 @@ export interface Stage1Result {
   provider: "gemini";
 }
 
+/** Gemini structured output 스키마 (googleSearch와 동시 사용 불가 → JSON 모드 우선) */
+const STAGE1_RESPONSE_SCHEMA = {
+  type: "OBJECT",
+  properties: {
+    title_candidates: {
+      type: "ARRAY",
+      items: { type: "STRING" },
+    },
+    draft_body: { type: "STRING" },
+    key_facts_used: {
+      type: "ARRAY",
+      items: { type: "STRING" },
+    },
+    source_notes: {
+      type: "ARRAY",
+      items: { type: "STRING" },
+    },
+  },
+  required: ["title_candidates", "draft_body", "key_facts_used", "source_notes"],
+};
+
 function getClient(): GoogleGenAI {
   const apiKey = process.env.GEMINI_API_KEY?.trim();
   if (!apiKey) throw new Error("GEMINI_API_KEY가 설정되지 않았습니다.");
@@ -29,7 +50,23 @@ function buildUserPrompt(keyword: string, topic: string): string {
   return `키워드: ${keyword}
 주제(제목 방향): ${topic}
 
-위 키워드·주제로 자료조사 후 블로그 초안 JSON을 작성하세요.`;
+위 키워드·주제로 자료를 정리한 뒤, 지정된 JSON 스키마에 맞춰 블로그 초안을 작성하세요.
+다른 텍스트 없이 JSON만 출력하세요.`;
+}
+
+function normalizeStage1Output(raw: Stage1Output): Stage1Output {
+  return {
+    title_candidates: Array.isArray(raw.title_candidates)
+      ? raw.title_candidates.map(String)
+      : [],
+    draft_body: String(raw.draft_body ?? "").trim(),
+    key_facts_used: Array.isArray(raw.key_facts_used)
+      ? raw.key_facts_used.map(String)
+      : [],
+    source_notes: Array.isArray(raw.source_notes)
+      ? raw.source_notes.map(String)
+      : [],
+  };
 }
 
 export async function runStage1Research(
@@ -47,16 +84,16 @@ export async function runStage1Research(
         systemInstruction: STAGE1_SYSTEM_PROMPT,
         maxOutputTokens: 8192,
         thinkingConfig: { thinkingBudget: 0 },
-        // Google Search grounding — 사실 기반 자료조사
-        tools: [{ googleSearch: {} }],
+        responseMimeType: "application/json",
+        responseSchema: STAGE1_RESPONSE_SCHEMA,
       },
     });
 
     const text = response.text?.trim();
     if (!text) throw new Error("Stage 1: Gemini가 빈 응답을 반환했습니다.");
 
-    const output = parseJsonObject<Stage1Output>(text);
-    if (!output.draft_body?.trim()) {
+    const output = normalizeStage1Output(parseJsonObject<Stage1Output>(text));
+    if (!output.draft_body) {
       throw new Error("Stage 1: draft_body가 비어 있습니다.");
     }
 
@@ -70,6 +107,5 @@ export async function runStage1Research(
     };
   };
 
-  const result = await withRetry(execute, 1);
-  return result;
+  return withRetry(execute, 1);
 }
