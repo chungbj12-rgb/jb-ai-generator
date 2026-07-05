@@ -1,7 +1,15 @@
 export type Tone = "friendly" | "professional" | "emotional";
-export type Platform = "naver" | "thread";
+export type Platform = "naver" | "thread" | "notice";
 export type TextProvider = "gemini" | "openai";
 export type ThreadAccountType = "personal" | "center";
+
+export type NoticeType = "new_class" | "announcement" | "event" | "general";
+
+export interface NoticeImageInput {
+  mimeType: string;
+  data: string;
+  name?: string;
+}
 
 export interface BlogPost {
   id: string;
@@ -50,6 +58,8 @@ export interface GenerateResponse {
   naver_content?: string;
   thread_content?: string;
   naver_hashtags?: string[];
+  notice_type?: NoticeType;
+  used_images?: number;
   pipeline?: PipelineCostSummary;
   error?: string;
 }
@@ -76,6 +86,8 @@ export interface GenerateFormState {
   platform: Platform;
   textProvider: TextProvider;
   threadAccountType: ThreadAccountType;
+  noticeType: NoticeType;
+  noticeSourceInfo: string;
 }
 
 export interface ToneOption {

@@ -18,6 +18,11 @@ export interface GenerateTextOptions {
   retries?: number;
 }
 
+export interface GeminiImagePart {
+  mimeType: string;
+  data: string;
+}
+
 /** GEMINI_API_KEY 설정 여부 */
 export function isGeminiConfigured(): boolean {
   return !!process.env.GEMINI_API_KEY?.trim();
@@ -124,6 +129,65 @@ export async function generateTextWithSystem(
       const response = await ai.models.generateContent({
         model: GEMINI_MODEL,
         contents: userPrompt,
+        config: {
+          maxOutputTokens,
+          thinkingConfig: { thinkingBudget },
+          systemInstruction: systemPrompt,
+        },
+      });
+
+      const text = response.text?.trim();
+      if (!text) {
+        throw new Error("Gemini가 빈 응답을 반환했습니다.");
+      }
+
+      return text;
+    } catch (error) {
+      lastError = error;
+      if (attempt < retries && isRetryableError(error)) {
+        await sleep(1000 * (attempt + 1));
+        continue;
+      }
+      break;
+    }
+  }
+
+  throw new Error(toUserFriendlyError(lastError));
+}
+
+/** system + user + 이미지 멀티모달 생성 */
+export async function generateMultimodalText(
+  systemPrompt: string,
+  userPrompt: string,
+  images: GeminiImagePart[],
+  options?: GenerateTextOptions,
+): Promise<string> {
+  const ai = getClient();
+  if (!ai) {
+    throw new Error("GEMINI_API_KEY가 설정되지 않았습니다.");
+  }
+
+  const maxOutputTokens = options?.maxOutputTokens ?? BLOG_MAX_OUTPUT_TOKENS;
+  const thinkingBudget = options?.thinkingBudget ?? 0;
+  const retries = options?.retries ?? 2;
+  let lastError: unknown;
+
+  const parts: Array<{ text: string } | { inlineData: { mimeType: string; data: string } }> =
+    [{ text: userPrompt }];
+  for (const img of images) {
+    parts.push({
+      inlineData: {
+        mimeType: img.mimeType,
+        data: img.data.replace(/^data:[^;]+;base64,/, ""),
+      },
+    });
+  }
+
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      const response = await ai.models.generateContent({
+        model: GEMINI_MODEL,
+        contents: [{ role: "user", parts }],
         config: {
           maxOutputTokens,
           thinkingConfig: { thinkingBudget },

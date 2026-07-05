@@ -32,7 +32,7 @@ export default function GeneratePage() {
         <div className="mb-8">
           <h1 className="text-xl font-bold text-gray-900">새 글 생성</h1>
           <p className="mt-1 text-sm text-gray-500">
-            배구·배구학원 키워드로 제목을 추천받고 JB스포츠 지침에 맞는 글을 생성하세요
+            블로그·쓰레드·공지 안내 글을 JB스포츠 지침에 맞게 생성하세요
           </p>
         </div>
 
@@ -57,8 +57,18 @@ export default function GeneratePage() {
             </h2>
             {result.pipeline && (
               <p className="mb-4 text-xs text-gray-500">
-                2단계 파이프라인 · {result.pipeline.char_count}자 · $
-                {result.pipeline.total_cost_usd.toFixed(4)} USD
+                {result.notice_type
+                  ? `공지·안내 · ${result.pipeline.char_count}자`
+                  : `2단계 파이프라인 · ${result.pipeline.char_count}자`}
+                {!result.notice_type && (
+                  <>
+                    {" "}
+                    · ${result.pipeline.total_cost_usd.toFixed(4)} USD
+                  </>
+                )}
+                {result.used_images ? (
+                  <span> · 참고 사진 {result.used_images}장</span>
+                ) : null}
                 {revisionCost > 0 && (
                   <span>
                     {" "}
