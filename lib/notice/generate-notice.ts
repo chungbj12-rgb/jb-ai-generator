@@ -2,6 +2,7 @@ import {
   buildNoticeSystemPrompt,
   buildNoticeUserPrompt,
 } from "@/lib/prompts/notice-prompts";
+import { MAX_NOTICE_IMAGES } from "@/lib/notice/constants";
 import {
   generateMultimodalText,
   generateTextWithSystem,
@@ -34,7 +35,7 @@ export async function generateNoticeContent(
   const title = options.title.trim();
   const sourceInfo = options.sourceInfo.trim();
   const tone = options.tone ?? "friendly";
-  const images = (options.images ?? []).slice(0, 5);
+  const images = (options.images ?? []).slice(0, MAX_NOTICE_IMAGES);
 
   if (!title) throw new Error("제목을 입력해 주세요.");
   if (!sourceInfo) throw new Error("안내 정보를 입력해 주세요.");

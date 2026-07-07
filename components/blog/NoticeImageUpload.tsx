@@ -2,10 +2,14 @@
 
 import { useRef, useState } from "react";
 import { ImagePlus, X } from "lucide-react";
+import {
+  MAX_NOTICE_IMAGES,
+  MAX_NOTICE_IMAGE_SIZE_MB,
+} from "@/lib/notice/constants";
 import type { NoticeImageInput } from "@/types";
 
-const MAX_IMAGES = 3;
-const MAX_SIZE_MB = 2;
+const MAX_IMAGES = MAX_NOTICE_IMAGES;
+const MAX_SIZE_MB = MAX_NOTICE_IMAGE_SIZE_MB;
 
 interface NoticeImageUploadProps {
   images: NoticeImageInput[];

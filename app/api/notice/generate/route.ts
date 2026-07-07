@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { generateNoticeContent } from "@/lib/notice/generate-notice";
+import { MAX_NOTICE_IMAGES } from "@/lib/notice/constants";
 import { generateNaverHashtags } from "@/lib/naver-hashtags";
 import { getApiAuth } from "@/lib/supabase/api-auth";
 import { isGeminiConfigured } from "@/lib/gemini";
@@ -17,7 +18,7 @@ const VALID_NOTICE_TYPES = new Set<NoticeType>([
 function stripDataUrl(images: unknown): NoticeImageInput[] {
   if (!Array.isArray(images)) return [];
   const out: NoticeImageInput[] = [];
-  for (const img of images.slice(0, 5)) {
+  for (const img of images.slice(0, MAX_NOTICE_IMAGES)) {
     const row = img as NoticeImageInput;
     const mimeType = String(row.mimeType ?? "image/jpeg");
     const data = String(row.data ?? "").trim();

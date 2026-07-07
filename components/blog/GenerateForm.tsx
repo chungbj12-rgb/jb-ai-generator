@@ -538,7 +538,7 @@ export default function GenerateForm({
           <p className="mt-1 text-[11px] leading-relaxed text-amber-800">
             입력하신 정보와 사진을 Gemini가 분석해{" "}
             {getNoticeTypeLabel(form.noticeType)} 네이버 블로그 글을 작성합니다.
-            사진이 있으면 본문에 [이미지N] 삽입 위치도 표시됩니다.
+            사진이 있으면 최대 10장까지 분석해 본문에 [이미지N] 삽입 위치도 표시됩니다.
           </p>
         </div>
       )}
