@@ -1,4 +1,4 @@
-import { GoogleGenAI } from "@google/genai";
+﻿import { GoogleGenAI } from "@google/genai";
 import { PIPELINE_CONFIG } from "@/blog-automation/lib/config";
 import { parseJsonObject } from "@/blog-automation/lib/parse-json";
 import {
@@ -44,7 +44,7 @@ const STAGE1_DRAFT_SCHEMA = {
 
 function getClient(): GoogleGenAI {
   const apiKey = process.env.GEMINI_API_KEY?.trim();
-  if (!apiKey) throw new Error("GEMINI_API_KEY가 설정되지 않았습니다.");
+  if (!apiKey) throw new Error("GEMINI_API_KEY媛 ?ㅼ젙?섏? ?딆븯?듬땲??");
   return new GoogleGenAI({ apiKey });
 }
 
@@ -86,11 +86,11 @@ function normalizeStage1Output(
 }
 
 function buildFactGatherUserPrompt(keyword: string, topic: string): string {
-  return `키워드: ${keyword}
-주제(제목): ${topic}
+  return `?ㅼ썙?? ${keyword}
+二쇱젣(?쒕ぉ): ${topic}
 
-위 주제에 대해 Google 검색으로 연구·통계·전문 자료를 조사하고 JSON으로 정리하세요.
-"N가지 이유" 형식 주제면 three_main_points에 정확히 핵심 이유를 담으세요.`;
+??二쇱젣?????Google 寃?됱쑝濡??곌뎄쨌?듦퀎쨌?꾨Ц ?먮즺瑜?議곗궗?섍퀬 JSON?쇰줈 ?뺣━?섏꽭??
+"N媛吏 ?댁쑀" ?뺤떇 二쇱젣硫?three_main_points???뺥솗???듭떖 ?댁쑀瑜??댁쑝?몄슂.`;
 }
 
 function buildDraftUserPrompt(
@@ -98,16 +98,16 @@ function buildDraftUserPrompt(
   topic: string,
   bundle: ResearchBundle,
 ): string {
-  return `키워드: ${keyword}
-주제(제목): ${topic}
+  return `?ㅼ썙?? ${keyword}
+二쇱젣(?쒕ぉ): ${topic}
 
-[research_bundle — 이 사실만 사용]
+[research_bundle ?????ъ떎留??ъ슜]
 ${JSON.stringify(bundle, null, 2)}
 
-위 연구·통계 자료만 바탕으로 정보 전달형 블로그 초안 JSON을 작성하세요.`;
+???곌뎄쨌?듦퀎 ?먮즺留?諛뷀깢?쇰줈 ?뺣낫 ?꾨떖??釉붾줈洹?珥덉븞 JSON???묒꽦?섏꽭??`;
 }
 
-/** 1-A: Google Search로 연구·통계 수집 */
+/** 1-A: Google Search濡??곌뎄쨌?듦퀎 ?섏쭛 */
 async function runStage1FactGathering(
   ai: GoogleGenAI,
   model: string,
@@ -127,7 +127,7 @@ async function runStage1FactGathering(
     });
 
     const text = response.text?.trim();
-    if (!text) throw new Error("Stage 1-A: 검색·자료 수집 응답이 비어 있습니다.");
+    if (!text) throw new Error("Stage 1-A: 寃?됀룹옄猷??섏쭛 ?묐떟??鍮꾩뼱 ?덉뒿?덈떎.");
 
     const bundle = normalizeResearchBundle(parseJsonObject<ResearchBundle>(text));
     if (
@@ -135,7 +135,7 @@ async function runStage1FactGathering(
       !bundle.three_main_points.length &&
       !bundle.studies_and_statistics.length
     ) {
-      throw new Error("Stage 1-A: 수집된 연구 자료가 없습니다.");
+      throw new Error("Stage 1-A: ?섏쭛???곌뎄 ?먮즺媛 ?놁뒿?덈떎.");
     }
 
     const usage = response.usageMetadata;
@@ -146,10 +146,10 @@ async function runStage1FactGathering(
     };
   };
 
-  return withRetry(execute, 1);
+  return withRetry(execute, 4);
 }
 
-/** 1-B: 수집 자료 기반 정보형 초안 (JSON 모드) */
+/** 1-B: ?섏쭛 ?먮즺 湲곕컲 ?뺣낫??珥덉븞 (JSON 紐⑤뱶) */
 async function runStage1DraftFromFacts(
   ai: GoogleGenAI,
   model: string,
@@ -172,14 +172,14 @@ async function runStage1DraftFromFacts(
     });
 
     const text = response.text?.trim();
-    if (!text) throw new Error("Stage 1-B: 초안 작성 응답이 비어 있습니다.");
+    if (!text) throw new Error("Stage 1-B: 珥덉븞 ?묒꽦 ?묐떟??鍮꾩뼱 ?덉뒿?덈떎.");
 
     const parsed = normalizeStage1Output(
       parseJsonObject<Stage1Output>(text),
       bundle,
     );
     if (!parsed.draft_body) {
-      throw new Error("Stage 1-B: draft_body가 비어 있습니다.");
+      throw new Error("Stage 1-B: draft_body媛 鍮꾩뼱 ?덉뒿?덈떎.");
     }
 
     const usage = response.usageMetadata;
@@ -190,11 +190,11 @@ async function runStage1DraftFromFacts(
     };
   };
 
-  return withRetry(execute, 1);
+  return withRetry(execute, 4);
 }
 
 /**
- * Stage 1 전체: Gemini 검색·연구 수집(1-A) → 사실 기반 초안(1-B)
+ * Stage 1 ?꾩껜: Gemini 寃?됀룹뿰援??섏쭛(1-A) ???ъ떎 湲곕컲 珥덉븞(1-B)
  */
 export async function runStage1Research(
   keyword: string,
@@ -222,3 +222,5 @@ export async function runStage1Research(
     provider: "gemini",
   };
 }
+
+
