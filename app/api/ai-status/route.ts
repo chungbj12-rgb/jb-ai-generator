@@ -2,6 +2,7 @@
 import { NextResponse } from "next/server";
 import { GoogleGenAI } from "@google/genai";
 import { OPENAI_TEXT_MODEL } from "@/lib/llm";
+import { PIPELINE_CONFIG } from "@/blog-automation/lib/config";
 
 export const dynamic = "force-dynamic";
 
@@ -67,13 +68,17 @@ async function testAnthropic(): Promise<{ ok: boolean; message: string }> {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "claude-sonnet-4-20250514",
+        model: PIPELINE_CONFIG.anthropicHumanizeModel,
         max_tokens: 16,
         messages: [{ role: "user", content: "ok" }],
       }),
     });
 
-    if (res.ok) return { ok: true, message: "Claude 연결 정상" };
+    if (res.ok)
+      return {
+        ok: true,
+        message: `Claude ${PIPELINE_CONFIG.anthropicHumanizeModel} 연결 정상`,
+      };
     const body = await res.text();
     return { ok: false, message: formatHttpError("Claude", res.status, body) };
   } catch (error) {
@@ -124,10 +129,11 @@ export async function GET() {
     summary: {
       keysRegistered: allKeysPresent,
       keysWorking: allTestsOk,
-      appCurrentlyUses: "Gemini + ChatGPT GPT-5.4 (글 생성 시 선택)",
-      gptClaudeStatus: openaiConfigured
-        ? "ChatGPT 연동됨 — /generate에서 선택 가능"
-        : "OpenAI 키 미등록",
+      appCurrentlyUses:
+        "3단계 파이프라인: Gemini(자료조사+초안) → GPT-5.4(품질보정) → Claude(사람이 쓴 것처럼 다듬기)",
+      gptClaudeStatus: anthropicConfigured
+        ? `Claude 연동됨 — 3단계 다듬기에 ${PIPELINE_CONFIG.anthropicHumanizeModel} 사용`
+        : "Anthropic 키 미등록 — 3단계 파이프라인 실행 불가",
     },
     env: {
       GEMINI_API_KEY: geminiConfigured,

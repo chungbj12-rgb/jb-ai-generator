@@ -8,3 +8,5 @@ packaging/dist/
 agent-output/
 .naver-session/
 agent.config.local.json
+.env*
+*.tsbuildinfo

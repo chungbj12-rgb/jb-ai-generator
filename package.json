@@ -8,15 +8,17 @@
     "start": "next start",
     "lint": "next lint",
     "test:all": "npm run build",
-    "pipeline:test": "tsx scripts/test-blog-pipeline.ts",
+    "pipeline:test": "dotenv -e .env.local -- tsx scripts/test-blog-pipeline.ts",
     "package:zip": "powershell -NoProfile -ExecutionPolicy Bypass -File packaging/scripts/build-package.ps1"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.115.0",
     "@google/genai": "^1.52.0",
     "@hookform/resolvers": "^5.4.0",
     "@supabase/ssr": "^0.10.3",
     "@supabase/supabase-js": "^2.49.8",
     "clsx": "^2.1.1",
+    "dotenv": "^17.4.2",
     "lucide-react": "^1.16.0",
     "next": "^15.3.3",
     "react": "^19.1.0",
@@ -30,8 +32,11 @@
     "@types/node": "^22.15.21",
     "@types/react": "^19.1.4",
     "@types/react-dom": "^19.1.5",
+    "dotenv-cli": "^11.0.0",
     "tailwindcss": "^4.1.8",
     "tsx": "^4.19.4",
     "typescript": "^5.8.3"
   }
 }
+
+

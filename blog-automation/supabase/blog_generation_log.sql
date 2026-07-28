@@ -1,10 +1,11 @@
--- blog_generation_log: 2단계 AI 파이프라인 토큰·비용 기록
--- Supabase SQL Editor에서 실행하거나 supabase/migrations/20260621120000_blog_generation_log.sql 적용
+-- blog_generation_log: 3단계 AI 파이프라인 토큰·비용 기록
+-- Supabase SQL Editor에서 실행하거나 supabase/migrations/20260621120000_blog_generation_log.sql +
+-- supabase/migrations/20260728120000_blog_generation_log_stage3.sql 적용
 
 CREATE TABLE IF NOT EXISTS blog_generation_log (
   id            UUID        DEFAULT gen_random_uuid() PRIMARY KEY,
   post_id       UUID        REFERENCES blog_posts(id) ON DELETE CASCADE NOT NULL,
-  stage         SMALLINT    NOT NULL CHECK (stage IN (1, 2)),
+  stage         SMALLINT    NOT NULL CHECK (stage IN (1, 2, 3)),
   provider      TEXT        NOT NULL,
   model         TEXT        NOT NULL,
   input_tokens  INTEGER     NOT NULL DEFAULT 0,

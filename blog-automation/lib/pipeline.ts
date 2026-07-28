@@ -10,11 +10,15 @@ import {
   lengthAdjustHint,
   runStage2Finalize,
 } from "@/blog-automation/lib/stage2-finalize";
+import {
+  isAnthropicConfigured,
+  runStage3Humanize,
+} from "@/blog-automation/lib/stage3-humanize";
 
 export type PipelineStatus = "completed" | "needs_review" | "failed";
 
 export interface StageCostLog {
-  stage: 1 | 2;
+  stage: 1 | 2 | 3;
   provider: string;
   model: string;
   inputTokens: number;
@@ -78,6 +82,16 @@ function openaiCost(input: number, output: number): number {
   );
 }
 
+function anthropicCost(input: number, output: number): number {
+  const p = PIPELINE_CONFIG.pricing;
+  return calcCostUsd(
+    input,
+    output,
+    p.anthropicInputPer1M,
+    p.anthropicOutputPer1M,
+  );
+}
+
 export interface GenerateBlogPostOptions {
   supabase?: SupabaseClient;
   postId?: string;
@@ -90,7 +104,7 @@ export interface GenerateBlogPostOptions {
 }
 
 /**
- * 2단계 블로그 파이프라인: Gemini(자료조사+초안) → GPT(품질보정+최종)
+ * 3단계 블로그 파이프라인: Gemini(자료조사+초안) → GPT(품질보정+최종) → Claude(사람이 쓴 것처럼 다듬기)
  */
 export async function generateBlogPost(
   keyword: string,
@@ -172,7 +186,66 @@ export async function generateBlogPost(
       stage2Cost = retryCost;
     }
 
-    const final_body = stage2.output.final_body;
+    // Stage 3 (Claude — 사람이 쓴 것처럼 문장 다듬기, 글자수 미달 시 1회 재호출).
+    // 키 미설정이거나 API 오류로 끝내 실패하면 Stage 2(GPT) 결과를 그대로 최종본으로
+    // 사용해 파이프라인이 끊기지 않도록 한다 (stage2 프롬프트도 자연스러운 문체를 지시함).
+    let stage3Output: { final_body: string; edits_made: string[] } | null = null;
+
+    if (isAnthropicConfigured()) {
+      try {
+        let stage3 = await runStage3Humanize(stage2.output, keyword, topic);
+        const stage3Cost: StageCostLog = {
+          stage: 3,
+          provider: stage3.provider,
+          model: stage3.model,
+          inputTokens: stage3.inputTokens,
+          outputTokens: stage3.outputTokens,
+          costUsd: anthropicCost(stage3.inputTokens, stage3.outputTokens),
+        };
+        stage_costs.push(stage3Cost);
+        if (logCtx) await logStage(logCtx, stage3Cost);
+
+        if (!isBodyLengthValid(stage3.output.final_body)) {
+          try {
+            const retry = await runStage3Humanize(
+              stage2.output,
+              keyword,
+              topic,
+              lengthAdjustHint(stage3.output.final_body),
+            );
+            const retryCost: StageCostLog = {
+              stage: 3,
+              provider: retry.provider,
+              model: retry.model,
+              inputTokens: retry.inputTokens,
+              outputTokens: retry.outputTokens,
+              costUsd: anthropicCost(retry.inputTokens, retry.outputTokens),
+            };
+            stage_costs.push(retryCost);
+            if (logCtx) await logStage(logCtx, retryCost);
+            stage3 = retry;
+          } catch (retryError) {
+            console.error(
+              "Stage 3(Claude) 글자수 재조정 실패 — 1차 결과를 사용합니다:",
+              retryError instanceof Error ? retryError.message : retryError,
+            );
+          }
+        }
+
+        stage3Output = stage3.output;
+      } catch (error) {
+        console.error(
+          "Stage 3(Claude) 실패 — Stage 2(GPT) 결과로 최종 마무리합니다:",
+          error instanceof Error ? error.message : error,
+        );
+      }
+    } else {
+      console.warn(
+        "ANTHROPIC_API_KEY 미설정 — Stage 3(Claude)를 건너뛰고 Stage 2(GPT) 결과로 최종 마무리합니다.",
+      );
+    }
+
+    const final_body = stage3Output?.final_body ?? stage2.output.final_body;
     const char_count = final_body.length;
     const lengthOk = isBodyLengthValid(final_body);
     const status: PipelineStatus = lengthOk ? "completed" : "needs_review";
@@ -195,7 +268,10 @@ export async function generateBlogPost(
       title: stage2.output.title,
       final_body,
       title_candidates: stage1.output.title_candidates,
-      edits_made: stage2.output.edits_made ?? [],
+      edits_made: [
+        ...(stage2.output.edits_made ?? []),
+        ...(stage3Output?.edits_made ?? []),
+      ],
       seo_checklist_result: stage2.output.seo_checklist_result ?? {},
       stage_costs,
       total_cost_usd,
