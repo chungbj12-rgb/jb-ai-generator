@@ -3,6 +3,8 @@ import { NextResponse } from "next/server";
 import { GoogleGenAI } from "@google/genai";
 import { OPENAI_TEXT_MODEL } from "@/lib/llm";
 import { PIPELINE_CONFIG } from "@/blog-automation/lib/config";
+import { GEMINI_MODEL } from "@/lib/gemini";
+import { thinkingConfigFor } from "@/blog-automation/lib/gemini-thinking";
 
 export const dynamic = "force-dynamic";
 
@@ -17,9 +19,12 @@ async function testGemini(): Promise<{ ok: boolean; message: string }> {
   try {
     const ai = new GoogleGenAI({ apiKey });
     const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
+      model: GEMINI_MODEL,
       contents: 'JSON만 출력: {"status":"ok"}',
-      config: { maxOutputTokens: 64, thinkingConfig: { thinkingBudget: 0 } },
+      config: {
+        maxOutputTokens: 64,
+        thinkingConfig: thinkingConfigFor(GEMINI_MODEL),
+      },
     });
     if (!response.text?.trim()) return { ok: false, message: "Gemini 빈 응답" };
     return { ok: true, message: "Gemini 연결 정상" };

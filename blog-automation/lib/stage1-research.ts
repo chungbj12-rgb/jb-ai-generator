@@ -6,6 +6,7 @@ import {
   buildStage1FactGatherPrompt,
 } from "@/blog-automation/lib/prompt-constants";
 import { withRetry } from "@/blog-automation/lib/retry";
+import { thinkingConfigFor } from "@/blog-automation/lib/gemini-thinking";
 
 export interface ResearchBundle {
   research_summary: string;
@@ -121,7 +122,7 @@ async function runStage1FactGathering(
       config: {
         systemInstruction: buildStage1FactGatherPrompt(),
         maxOutputTokens: 4096,
-        thinkingConfig: { thinkingBudget: 0 },
+        thinkingConfig: thinkingConfigFor(model),
         tools: [{ googleSearch: {} }],
       },
     });
@@ -165,7 +166,7 @@ async function runStage1DraftFromFacts(
       config: {
         systemInstruction: buildStage1DraftPrompt(mergedGuideline),
         maxOutputTokens: 8192,
-        thinkingConfig: { thinkingBudget: 0 },
+        thinkingConfig: thinkingConfigFor(model),
         responseMimeType: "application/json",
         responseSchema: STAGE1_DRAFT_SCHEMA,
       },

@@ -2,7 +2,7 @@
 
 export const PIPELINE_CONFIG = {
   geminiDraftModel:
-    process.env.GEMINI_DRAFT_MODEL?.trim() || "gemini-3.5-flash-lite",
+    process.env.GEMINI_DRAFT_MODEL?.trim() || "gemini-3.6-flash",
   openaiFinalModel: process.env.OPENAI_FINAL_MODEL?.trim() || "gpt-5.4",
   anthropicHumanizeModel:
     process.env.ANTHROPIC_HUMANIZE_MODEL?.trim() || "claude-sonnet-5",

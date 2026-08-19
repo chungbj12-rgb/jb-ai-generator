@@ -1,5 +1,6 @@
 // Google Gemini API — 서버 사이드 전용
 import { GoogleGenAI } from "@google/genai";
+import { thinkingConfigFor } from "@/blog-automation/lib/gemini-thinking";
 
 export const GEMINI_MODEL = "gemini-2.5-flash";
 
@@ -74,7 +75,7 @@ export async function generateText(
   }
 
   const maxOutputTokens = options?.maxOutputTokens ?? MAX_OUTPUT_TOKENS;
-  const thinkingBudget = options?.thinkingBudget ?? 0;
+  const thinking = thinkingConfigFor(GEMINI_MODEL, options?.thinkingBudget ?? 0);
   const retries = options?.retries ?? 2;
   let lastError: unknown;
 
@@ -85,7 +86,7 @@ export async function generateText(
         contents: prompt,
         config: {
           maxOutputTokens,
-          thinkingConfig: { thinkingBudget },
+          thinkingConfig: thinking,
         },
       });
 
@@ -120,7 +121,7 @@ export async function generateTextWithSystem(
   }
 
   const maxOutputTokens = options?.maxOutputTokens ?? MAX_OUTPUT_TOKENS;
-  const thinkingBudget = options?.thinkingBudget ?? 0;
+  const thinking = thinkingConfigFor(GEMINI_MODEL, options?.thinkingBudget ?? 0);
   const retries = options?.retries ?? 2;
   let lastError: unknown;
 
@@ -131,7 +132,7 @@ export async function generateTextWithSystem(
         contents: userPrompt,
         config: {
           maxOutputTokens,
-          thinkingConfig: { thinkingBudget },
+          thinkingConfig: thinking,
           systemInstruction: systemPrompt,
         },
       });
@@ -168,7 +169,7 @@ export async function generateMultimodalText(
   }
 
   const maxOutputTokens = options?.maxOutputTokens ?? BLOG_MAX_OUTPUT_TOKENS;
-  const thinkingBudget = options?.thinkingBudget ?? 0;
+  const thinking = thinkingConfigFor(GEMINI_MODEL, options?.thinkingBudget ?? 0);
   const retries = options?.retries ?? 2;
   let lastError: unknown;
 
@@ -190,7 +191,7 @@ export async function generateMultimodalText(
         contents: [{ role: "user", parts }],
         config: {
           maxOutputTokens,
-          thinkingConfig: { thinkingBudget },
+          thinkingConfig: thinking,
           systemInstruction: systemPrompt,
         },
       });
