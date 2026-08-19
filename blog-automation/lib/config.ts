@@ -2,7 +2,7 @@
 
 export const PIPELINE_CONFIG = {
   geminiDraftModel:
-    process.env.GEMINI_DRAFT_MODEL?.trim() || "gemini-2.5-flash-lite",
+    process.env.GEMINI_DRAFT_MODEL?.trim() || "gemini-3.5-flash-lite",
   openaiFinalModel: process.env.OPENAI_FINAL_MODEL?.trim() || "gpt-5.4",
   anthropicHumanizeModel:
     process.env.ANTHROPIC_HUMANIZE_MODEL?.trim() || "claude-sonnet-5",
@@ -10,8 +10,8 @@ export const PIPELINE_CONFIG = {
   maxChars: Number(process.env.PIPELINE_MAX_CHARS ?? 1800),
   /** 1M 토큰당 USD — .env로 덮어쓰기 가능 */
   pricing: {
-    geminiInputPer1M: Number(process.env.GEMINI_INPUT_PRICE_PER_1M ?? 0.1),
-    geminiOutputPer1M: Number(process.env.GEMINI_OUTPUT_PRICE_PER_1M ?? 0.4),
+    geminiInputPer1M: Number(process.env.GEMINI_INPUT_PRICE_PER_1M ?? 0.3),
+    geminiOutputPer1M: Number(process.env.GEMINI_OUTPUT_PRICE_PER_1M ?? 2.5),
     openaiInputPer1M: Number(process.env.OPENAI_INPUT_PRICE_PER_1M ?? 2.5),
     openaiOutputPer1M: Number(process.env.OPENAI_OUTPUT_PRICE_PER_1M ?? 15),
     anthropicInputPer1M: Number(process.env.ANTHROPIC_INPUT_PRICE_PER_1M ?? 3),
