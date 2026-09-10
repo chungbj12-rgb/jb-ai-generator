@@ -15,6 +15,14 @@ import {
   Platform,
 } from "@/types";
 
+async function readJsonSafe(res: Response): Promise<GenerateResponse> {
+  try {
+    return (await res.json()) as GenerateResponse;
+  } catch {
+    return {};
+  }
+}
+
 interface GenerateFormProps {
   onResult: (result: GenerateResponse) => void;
   onLoading: (loading: boolean) => void;
@@ -124,9 +132,16 @@ export default function GenerateForm({
             })),
           }),
         });
-        const data: GenerateResponse = await res.json();
+        // Vercel이 본문 4.5MB 초과를 413(text/plain)으로 거부하면 res.json()이
+        // 예외를 던져 "네트워크 오류"로 뭉개지므로, 안전하게 파싱해 상태별로 안내한다.
+        const data = await readJsonSafe(res);
         if (!res.ok) {
-          setError(data.error || "글 생성에 실패했습니다.");
+          setError(
+            data.error ||
+              (res.status === 413
+                ? "사진 용량이 너무 큽니다. 사진 수를 줄이거나 작은 사진으로 바꿔 다시 시도해주세요."
+                : "글 생성에 실패했습니다."),
+          );
           return;
         }
         onResult(data);

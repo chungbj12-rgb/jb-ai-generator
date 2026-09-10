@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { generateNoticeContent } from "@/lib/notice/generate-notice";
-import { MAX_NOTICE_IMAGES } from "@/lib/notice/constants";
+import {
+  MAX_NOTICE_IMAGES,
+  MAX_NOTICE_IMAGES_TOTAL_BYTES,
+} from "@/lib/notice/constants";
+import { findOverflowIndex, formatMB } from "@/lib/notice/image-payload";
 import { generateNaverHashtags } from "@/lib/naver-hashtags";
 import { getApiAuth } from "@/lib/supabase/api-auth";
 import { isGeminiConfigured } from "@/lib/gemini";
@@ -46,6 +50,19 @@ export async function POST(request: NextRequest) {
       : "general";
     const tone = (body.tone ?? "friendly") as Tone;
     const images = stripDataUrl(body.images);
+
+    // 클라이언트가 압축을 우회했거나 구버전 클라이언트인 경우를 대비한 최종 검증.
+    // Vercel 본문 제한(4.5MB)에 걸리면 함수가 호출조차 되지 않으므로, 그보다 작은
+    // 예산(3MB)에서 어떤 사진이 문제인지 명확한 한국어로 알려준다.
+    const overflowIndex = findOverflowIndex(images, MAX_NOTICE_IMAGES_TOTAL_BYTES);
+    if (overflowIndex >= 0) {
+      return NextResponse.json(
+        {
+          error: `사진 용량이 너무 큽니다. ${overflowIndex + 1}번째 사진을 빼고 다시 시도해주세요. (사진 전체 합계 ${formatMB(MAX_NOTICE_IMAGES_TOTAL_BYTES, 0)} 이내)`,
+        },
+        { status: 413 },
+      );
+    }
 
     if (!title) {
       return NextResponse.json({ error: "제목을 입력해 주세요." }, { status: 400 });
