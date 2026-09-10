@@ -152,7 +152,7 @@ export const JB_NAVER_OUTPUT_CHECKLIST = `
 5. 소제목 3~4개 ("첫 번째, …" / "두 번째, …" 형식)
 6. 배구 교육·JB스포츠 방식·기대효과가 각 섹션에 포함
 7. 지역 키워드(용인/수지/배구학원 등) 4~5회 자연 반복
-8. 마지막 연락처: ${JB_CENTER_INFO.mobile} 포함
+8. 마지막 연락처: ${JB_CENTER_INFO.phone} 또는 ${JB_CENTER_INFO.mobile} 포함 (이 두 번호 외 다른 전화번호 절대 금지)
 9. 마무리: "긴 글 읽어주셔서 감사합니다."
 10. (사진: …) 이미지 삽입 위치 5곳 이상
 11. JSON·blocks 형식 금지 — 읽을 수 있는 블로그 본문 plain text만 출력

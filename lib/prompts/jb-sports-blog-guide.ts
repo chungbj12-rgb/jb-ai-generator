@@ -9,10 +9,15 @@ export const JB_CENTER_INFO = {
   coachesPerClass: "수업당 코치 2명 동시 진행",
   shuttle: "차량 9대 (아파트 정문 픽업)",
   phone: "031-266-5779",
-  mobile: "010-3397-5866",
+  mobile: "010-6513-5779",
   tuition: "100,000~150,000원",
   trial: "초등 무료 / 그 외 40,000원 (카카오채널 팔로우 시 50% 할인)",
 } as const;
+
+/** 글에 쓸 수 있는 문의 전화번호는 이 두 개뿐이다. 다른 번호를 만들어 쓰면 안 된다. */
+export const JB_CONTACT_NUMBERS = [JB_CENTER_INFO.phone, JB_CENTER_INFO.mobile] as const;
+export const JB_CONTACT_TEXT = `${JB_CENTER_INFO.phone} 또는 ${JB_CENTER_INFO.mobile}`;
+export const JB_CONTACT_RULE = `문의 전화번호는 ${JB_CENTER_INFO.phone} / ${JB_CENTER_INFO.mobile} 두 개만 사용한다. 이 외의 전화번호(다른 010 번호, 지어낸 번호, 예시용 번호)는 절대 쓰지 않는다.`;
 
 /** 블로그 도입 첫 문장 (고정) */
 export const JB_INTRO_OPENING = "안녕하십니까 제이비스포츠 배구전문센터 입니다.";
@@ -67,7 +72,7 @@ export const JB_SPORTS_BLOG_STYLE_GUIDE = `
 - ${JB_CENTER_INFO.name} / 대표 ${JB_CENTER_INFO.ceo}
 - ${JB_CENTER_INFO.location} · ${JB_CENTER_INFO.years} · 누적 ${JB_CENTER_INFO.members}
 - ${JB_CENTER_INFO.coachesPerClass} · ${JB_CENTER_INFO.shuttle}
-- 문의 ☎ ${JB_CENTER_INFO.phone} / ${JB_CENTER_INFO.mobile}
+- 문의 ☎ ${JB_CENTER_INFO.phone} / ${JB_CENTER_INFO.mobile} (이 두 번호만 사용, 다른 번호 절대 금지)
 - 월 ${JB_CENTER_INFO.tuition} · 체험 ${JB_CENTER_INFO.trial}
 
 ## 제목 규칙
@@ -94,7 +99,7 @@ export const JB_SPORTS_BLOG_STYLE_GUIDE = `
    - "배구는 단순한 스포츠가 아닙니다."
    - "우리 아이의 숨겨진 능력을 깨워주는 시간, 오늘 시작해보세요."
    - "지금 평일반/주말반 모집 중입니다. 문의주세요!"
-   - ☎ ${JB_CENTER_INFO.mobile} · "긴 글 읽어주셔서 감사합니다."
+   - ☎ ${JB_CENTER_INFO.phone} / ${JB_CENTER_INFO.mobile} · "긴 글 읽어주셔서 감사합니다."
 8) image — 코치+아이들 단체·밝은 마무리 (CTA 블록은 시스템 추가)
 
 ## 설득 6공식 (모두 적용)
@@ -109,11 +114,13 @@ export const JB_SPORTS_BLOG_STYLE_GUIDE = `
 
 ## SEO
 - 본문 지역 키워드 4~5회 자연 반복 · 1,700~1,900자 (최소 1,500자)
-- ${JB_CENTER_INFO.mobile} 필수 (글 마지막 연락처) · CTA 자연스럽게
+- ${JB_CONTACT_RULE}
+- 글 마지막 연락처 필수 (${JB_CONTACT_TEXT}) · CTA 자연스럽게
 
 ## 절대 금지
 - AI 티 ("~할 수 있습니다" 반복) · 추상어("최고의 센터") · 직접 광고("지금 등록!")
 - 한 문단 5줄+ · 같은 문장 구조 3회+ · 1,500자 미만
+- ${JB_CENTER_INFO.phone} / ${JB_CENTER_INFO.mobile} 외의 전화번호
 `.trim();
 
 export function buildPlannerRolePrompt(): string {

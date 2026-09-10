@@ -64,7 +64,7 @@ ${platform === "naver" ? JB_CTA_RULES : "(쓰레드는 짧은 마무리)"}
 4. 수정 요청과 무관한 잘 쓰인 부분은 최대한 유지한다.
 5. 문체는 신뢰감 있고 다정한 학부모 대상 어투. 과장 광고 금지.
 6. ${lengthRule}
-7. 연락처: 글 마지막에 ☎ ${JB_CENTER_INFO.mobile} 안내
+7. 연락처: 글 마지막에 ☎ ${JB_CENTER_INFO.phone} / ${JB_CENTER_INFO.mobile} 안내. 이 두 번호 외 다른 전화번호는 절대 쓰지 않으며, 본문에 다른 번호가 있으면 이 번호로 바꾼다.
 
 출력은 반드시 아래 JSON만:
 {
