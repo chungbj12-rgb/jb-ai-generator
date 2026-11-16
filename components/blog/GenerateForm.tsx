@@ -521,11 +521,11 @@ export default function GenerateForm({
       {isNaverSelected && (
         <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-3">
           <p className="text-xs font-semibold text-emerald-800">
-            Step 3 · 2단계 AI 파이프라인
+            Step 3 · 3단계 AI 파이프라인
           </p>
           <p className="mt-1 text-[11px] leading-relaxed text-emerald-700">
-            1단계 Gemini (검색·연구수집 → 사실 기반 초안) → 2단계 GPT-5.4
-            (직접 쓴 것처럼 정돈·브랜드 톤)
+            1단계 Gemini (연구·초안) → 2단계 GPT-5.4 (정돈·브랜드) → 3단계
+            Claude (대표가 직접 쓴 듯 마무리)
           </p>
         </div>
       )}

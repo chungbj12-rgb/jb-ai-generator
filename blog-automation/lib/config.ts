@@ -1,9 +1,11 @@
-/** 2단계 파이프라인 환경·단가 설정 */
+/** 3단계 파이프라인 환경·단가 설정 */
 
 export const PIPELINE_CONFIG = {
   geminiDraftModel:
     process.env.GEMINI_DRAFT_MODEL?.trim() || "gemini-2.5-flash-lite",
   openaiFinalModel: process.env.OPENAI_FINAL_MODEL?.trim() || "gpt-5.4",
+  claudeHumanizeModel:
+    process.env.CLAUDE_HUMANIZE_MODEL?.trim() || "claude-sonnet-4-20250514",
   minChars: Number(process.env.PIPELINE_MIN_CHARS ?? 1500),
   maxChars: Number(process.env.PIPELINE_MAX_CHARS ?? 1800),
   /** 1M 토큰당 USD — .env로 덮어쓰기 가능 */
@@ -12,6 +14,8 @@ export const PIPELINE_CONFIG = {
     geminiOutputPer1M: Number(process.env.GEMINI_OUTPUT_PRICE_PER_1M ?? 0.4),
     openaiInputPer1M: Number(process.env.OPENAI_INPUT_PRICE_PER_1M ?? 2.5),
     openaiOutputPer1M: Number(process.env.OPENAI_OUTPUT_PRICE_PER_1M ?? 15),
+    claudeInputPer1M: Number(process.env.CLAUDE_INPUT_PRICE_PER_1M ?? 3),
+    claudeOutputPer1M: Number(process.env.CLAUDE_OUTPUT_PRICE_PER_1M ?? 15),
   },
 } as const;
 

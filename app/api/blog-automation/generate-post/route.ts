@@ -1,4 +1,4 @@
-// 2단계 블로그 파이프라인 API — POST { keyword, topic, tone?, customCta? }
+// 3단계 블로그 파이프라인 API — POST { keyword, topic, tone?, customCta? }
 import { NextRequest, NextResponse } from "next/server";
 import { generateBlogPost } from "@/blog-automation/lib/pipeline";
 import { getApiAuth } from "@/lib/supabase/api-auth";
@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           error:
-            "2단계 파이프라인에 GEMINI_API_KEY와 OPENAI_API_KEY가 모두 필요합니다.",
+            "블로그 파이프라인에 GEMINI_API_KEY와 OPENAI_API_KEY가 필요합니다. 3단계 Claude는 ANTHROPIC_API_KEY 설정 시 자동 실행됩니다.",
         },
         { status: 503 },
       );

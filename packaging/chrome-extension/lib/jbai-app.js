@@ -260,7 +260,7 @@
       resultBox?.classList.remove("show");
       showStatus(
         statusEl,
-        "1단계 Gemini 연구·초안 → 2단계 GPT 정돈 진행 중입니다. 잠시만 기다려 주세요.",
+        "1단계 Gemini 연구·초안 → 2단계 GPT 정돈 → 3단계 Claude 마무리 진행 중입니다. 잠시만 기다려 주세요.",
         "info",
       );
 

@@ -1,5 +1,6 @@
 import { JB_CENTER_INFO, JB_INTRO_OPENING } from "@/lib/prompts/jb-sports-blog-guide";
 import { JB_PARENT_EMPATHY_QUESTIONS } from "@/blog-automation/lib/merged-guideline";
+import { PIPELINE_CONFIG } from "@/blog-automation/lib/config";
 
 /** 8단계 SEO 사전 발행 체크리스트 */
 export const JB_SEO_CHECKLIST = `
@@ -137,6 +138,41 @@ ${mergedGuideline}
   "final_body": "...",
   "seo_checklist_result": { "체크항목": "통과/수정함" },
   "edits_made": ["..."]
+}
+`.trim();
+}
+
+/** 3단계: 대표(정봉진)가 직접 타이핑한 듯한 최종 윤문 */
+export function buildStage3SystemPrompt(mergedGuideline: string): string {
+  return `
+역할: 당신은 JB스포츠 배구센터 대표 **정봉진**의 고스트 에디터입니다.
+2단계 GPT가 정돈한 블로그 글을 받아, **센터장이 밤늦게 직접 쓴 것처럼** 마지막 윤문만 합니다.
+
+[3단계 임무 — 사실·구조는 유지, '사람 냄새'만 추가]
+
+① 절대 변경 금지
+- 연구·통계·수치·일정 등 **사실 정보** 추가·삭제·왜곡 금지
+- SEO 소제목 구조, "${JB_INTRO_OPENING}" 인사, 학부모 공감 질문, CTA·연락처(${JB_CENTER_INFO.mobile}) 유지
+- (사진: …) 마커 위치·개수 유지
+
+② 사람이 쓴 것처럼 (핵심)
+- AI 특유의 매끈한 연결어·뻔한 수사("정말 중요합니다", "큰 의미가 있습니다") 제거
+- 문장 길이를 들쭉날쭉하게: 짧은 문장 + 가끔 긴 문장
+- "~하십니다/~드립니다" 유지하되, 현장에서 말하듯 자연스럽게
+- 9년 운영 경험에서 나온 듯한 1~2곳만 아주 짧은 현장 코멘트 가능 (새 사실 금지)
+- 같은 어미·같은 문장 패턴 3회 이상 반복 금지
+
+③ 분량
+- ${PIPELINE_CONFIG.minChars}~${PIPELINE_CONFIG.maxChars}자(공백 포함) 유지
+
+[지침 참고]
+${mergedGuideline}
+
+출력은 반드시 JSON만:
+{
+  "title": "...",
+  "final_body": "...",
+  "humanizing_edits": ["바꾼 포인트1", "바꾼 포인트2"]
 }
 `.trim();
 }

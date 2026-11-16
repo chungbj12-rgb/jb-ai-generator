@@ -10,11 +10,13 @@ import {
   lengthAdjustHint,
   runStage2Finalize,
 } from "@/blog-automation/lib/stage2-finalize";
+import { runStage3Humanize } from "@/blog-automation/lib/stage3-humanize";
+import { isStage3Enabled } from "@/lib/anthropic";
 
 export type PipelineStatus = "completed" | "needs_review" | "failed";
 
 export interface StageCostLog {
-  stage: 1 | 2;
+  stage: 1 | 2 | 3;
   provider: string;
   model: string;
   inputTokens: number;
@@ -78,6 +80,16 @@ function openaiCost(input: number, output: number): number {
   );
 }
 
+function claudeCost(input: number, output: number): number {
+  const p = PIPELINE_CONFIG.pricing;
+  return calcCostUsd(
+    input,
+    output,
+    p.claudeInputPer1M,
+    p.claudeOutputPer1M,
+  );
+}
+
 export interface GenerateBlogPostOptions {
   supabase?: SupabaseClient;
   postId?: string;
@@ -90,7 +102,8 @@ export interface GenerateBlogPostOptions {
 }
 
 /**
- * 2단계 블로그 파이프라인: Gemini(자료조사+초안) → GPT(품질보정+최종)
+ * 3단계 블로그 파이프라인:
+ * Gemini(연구·초안) → GPT(정돈·브랜드) → Claude(대표 직접 쓴 듯 윤문, 선택)
  */
 export async function generateBlogPost(
   keyword: string,
@@ -172,7 +185,64 @@ export async function generateBlogPost(
       stage2Cost = retryCost;
     }
 
-    const final_body = stage2.output.final_body;
+    let finalTitle = stage2.output.title;
+    let final_body = stage2.output.final_body;
+    let edits_made = [...(stage2.output.edits_made ?? [])];
+    const seo_checklist_result = stage2.output.seo_checklist_result ?? {};
+
+    // Stage 3 — Claude 휴먼 마무리 (ANTHROPIC_API_KEY 있을 때)
+    if (isStage3Enabled()) {
+      let stage3 = await runStage3Humanize(
+        stage1.output,
+        stage2.output,
+        keyword,
+        topic,
+        mergedGuideline,
+      );
+      let stage3Cost: StageCostLog = {
+        stage: 3,
+        provider: stage3.provider,
+        model: stage3.model,
+        inputTokens: stage3.inputTokens,
+        outputTokens: stage3.outputTokens,
+        costUsd: claudeCost(stage3.inputTokens, stage3.outputTokens),
+      };
+      stage_costs.push(stage3Cost);
+      if (logCtx) await logStage(logCtx, stage3Cost);
+
+      if (!isBodyLengthValid(stage3.output.final_body)) {
+        const retry3 = await runStage3Humanize(
+          stage1.output,
+          stage2.output,
+          keyword,
+          topic,
+          mergedGuideline,
+          lengthAdjustHint(stage3.output.final_body),
+        );
+        const retry3Cost: StageCostLog = {
+          stage: 3,
+          provider: retry3.provider,
+          model: retry3.model,
+          inputTokens: retry3.inputTokens,
+          outputTokens: retry3.outputTokens,
+          costUsd: claudeCost(retry3.inputTokens, retry3.outputTokens),
+        };
+        stage_costs.push(retry3Cost);
+        if (logCtx) await logStage(logCtx, retry3Cost);
+        stage3 = retry3;
+        stage3Cost = retry3Cost;
+      }
+
+      finalTitle = stage3.output.title;
+      final_body = stage3.output.final_body;
+      if (stage3.output.humanizing_edits?.length) {
+        edits_made = [
+          ...edits_made,
+          ...stage3.output.humanizing_edits.map((e) => `[3단계] ${e}`),
+        ];
+      }
+    }
+
     const char_count = final_body.length;
     const lengthOk = isBodyLengthValid(final_body);
     const status: PipelineStatus = lengthOk ? "completed" : "needs_review";
@@ -182,7 +252,7 @@ export async function generateBlogPost(
       await supabase
         .from("blog_posts")
         .update({
-          topic: stage2.output.title || topic,
+          topic: finalTitle || topic,
           naver_content: final_body,
           keyword,
           pipeline_status: status,
@@ -192,11 +262,11 @@ export async function generateBlogPost(
 
     return {
       postId,
-      title: stage2.output.title,
+      title: finalTitle,
       final_body,
       title_candidates: stage1.output.title_candidates,
-      edits_made: stage2.output.edits_made ?? [],
-      seo_checklist_result: stage2.output.seo_checklist_result ?? {},
+      edits_made,
+      seo_checklist_result,
       stage_costs,
       total_cost_usd,
       status,

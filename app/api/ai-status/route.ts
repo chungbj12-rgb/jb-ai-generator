@@ -124,7 +124,8 @@ export async function GET() {
     summary: {
       keysRegistered: allKeysPresent,
       keysWorking: allTestsOk,
-      appCurrentlyUses: "Gemini + ChatGPT GPT-5.4 (글 생성 시 선택)",
+      appCurrentlyUses:
+        "Gemini(1단계) + GPT-5.4(2단계) + Claude(3단계, ANTHROPIC_API_KEY 설정 시)",
       gptClaudeStatus: openaiConfigured
         ? "ChatGPT 연동됨 — /generate에서 선택 가능"
         : "OpenAI 키 미등록",

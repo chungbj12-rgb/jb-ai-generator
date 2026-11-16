@@ -59,7 +59,9 @@ export default function GeneratePage() {
               <p className="mb-4 text-xs text-gray-500">
                 {result.notice_type
                   ? `공지·안내 · ${result.pipeline.char_count}자`
-                  : `2단계 파이프라인 · ${result.pipeline.char_count}자`}
+                  : result.pipeline.stage_costs?.some((s) => s.stage === 3)
+                    ? `3단계 파이프라인 · ${result.pipeline.char_count}자`
+                    : `2단계 파이프라인 · ${result.pipeline.char_count}자`}
                 {!result.notice_type && (
                   <>
                     {" "}
