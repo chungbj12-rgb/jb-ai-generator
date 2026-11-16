@@ -79,10 +79,24 @@ export async function POST(request: NextRequest) {
 
     if (postId) {
       const column = platform === "naver" ? "naver_content" : "thread_content";
-      await supabase
+      // update가 RLS로 0건 반영되면 수정본이 저장되지 않으므로 반영 여부를 확인한다.
+      const { data: updated, error: updateError } = await supabase
         .from("blog_posts")
         .update({ [column]: result.revised_content })
-        .eq("id", postId);
+        .eq("id", postId)
+        .select("id");
+
+      if (updateError || !updated?.length) {
+        console.error(
+          `수정본 저장 실패 (post ${postId}):`,
+          updateError?.message ??
+            "update가 0건 반영됨 (blog_posts RLS UPDATE 정책 확인 필요)",
+        );
+        return NextResponse.json(
+          { error: "수정본을 저장하지 못했습니다. 잠시 후 다시 시도해 주세요." },
+          { status: 500 },
+        );
+      }
 
       await supabase.from("blog_generation_log").insert({
         post_id: postId,

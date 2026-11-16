@@ -17,6 +17,8 @@ ALTER TABLE blog_posts ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "본인 글만 조회 가능" ON blog_posts FOR SELECT USING (auth.uid() = user_id);
 CREATE POLICY "본인 글만 생성 가능" ON blog_posts FOR INSERT WITH CHECK (auth.uid() = user_id);
 CREATE POLICY "본인 글만 삭제 가능" ON blog_posts FOR DELETE USING (auth.uid() = user_id);
+CREATE POLICY "본인 글만 수정 가능" ON blog_posts FOR UPDATE
+  USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
 
 -- 플랫폼별 프롬프트 지침 (상세 DDL·초기 데이터: supabase/guidelines_schema.sql)
 CREATE TABLE IF NOT EXISTS prompt_guidelines (

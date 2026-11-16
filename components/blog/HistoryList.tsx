@@ -112,6 +112,11 @@ export default function HistoryList({ posts, authorEmail }: HistoryListProps) {
                     {post.topic}
                   </p>
                   <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                    {!hasNaver && !hasThread && (
+                      <span className="rounded-md bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-700">
+                        본문 없음
+                      </span>
+                    )}
                     {hasNaver && (
                       <span className="rounded-md bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-700">
                         네이버
@@ -175,6 +180,18 @@ export default function HistoryList({ posts, authorEmail }: HistoryListProps) {
               </button>
             </div>
             <div className="space-y-4">
+              {!viewPost.naver_content && !viewPost.thread_content && (
+                <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-6 text-center">
+                  <p className="text-sm font-medium text-amber-900">
+                    저장된 본문이 없습니다
+                  </p>
+                  <p className="mt-1 text-xs text-amber-700">
+                    {viewPost.pipeline_status === "processing"
+                      ? "글 생성이 완료되지 않은 채 기록만 남은 글입니다. 다시 생성해 주세요."
+                      : "본문이 저장되지 않았습니다. 다시 생성해 주세요."}
+                  </p>
+                </div>
+              )}
               {viewPost.naver_content && (
                 <>
                   <ResultCard

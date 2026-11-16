@@ -248,11 +248,14 @@ export async function generateBlogPost(
     const final_body = stage3Output?.final_body ?? stage2.output.final_body;
     const char_count = final_body.length;
     const lengthOk = isBodyLengthValid(final_body);
-    const status: PipelineStatus = lengthOk ? "completed" : "needs_review";
+    let status: PipelineStatus = lengthOk ? "completed" : "needs_review";
     const total_cost_usd = stage_costs.reduce((s, c) => s + c.costUsd, 0);
 
     if (supabase && postId) {
-      await supabase
+      // RLS UPDATE 정책이 없으면 update가 에러 없이 0건 반영되고, 본문이 저장되지
+      // 않은 채 성공처럼 보인다 (히스토리 "보기" 본문이 비던 원인).
+      // 반드시 반영된 행 수를 확인해서 조용히 넘어가지 않도록 한다.
+      const { data: updated, error: updateError } = await supabase
         .from("blog_posts")
         .update({
           topic: stage2.output.title || topic,
@@ -260,7 +263,17 @@ export async function generateBlogPost(
           keyword,
           pipeline_status: status,
         })
-        .eq("id", postId);
+        .eq("id", postId)
+        .select("id");
+
+      if (updateError || !updated?.length) {
+        status = "needs_review";
+        console.error(
+          `본문 저장 실패 (post ${postId}) — 히스토리에 본문이 비어 보입니다:`,
+          updateError?.message ??
+            "update가 0건 반영됨 (blog_posts RLS UPDATE 정책 확인 필요)",
+        );
+      }
     }
 
     return {
